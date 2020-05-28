@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./__color_log.sh
+source $(cd -P "$(dirname "$0")" && pwd)/__color_log.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -19,3 +19,11 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
+export SCRIPT_NAME="$0"
+export SCRIPT_DIR=$(util_get_script_dir)
+export INPUT_DIR=$(util_get_input_dir)
+export OUTPUT_DIR=$(util_get_output_dir)
+export PLATFORM_TYPE=""
+
+util_create_dir "$INPUT_DIR"
+util_create_dir "$OUTPUT_DIR"

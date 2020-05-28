@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./android-common.sh
+source $(cd -P "$(dirname "$0")" && pwd)/android-common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -31,19 +31,12 @@ while [ -h "$SOURCE" ]; do
 done
 pwd_path="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 
-echo pwd_path=${pwd_path}
-echo TOOLS_ROOT=${TOOLS_ROOT}
-
 LIB_VERSION="v1.40.0"
 LIB_NAME="nghttp2-1.40.0"
 LIB_DEST_DIR="${pwd_path}/../output/android/nghttp2-universal"
+DOWNLOAD_ADRESS="https://github.com/nghttp2/nghttp2/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz"
 
-echo "https://github.com/nghttp2/nghttp2/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz"
-
-DEVELOPER=$(xcode-select -print-path)
-SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
-rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
-[ -f "${LIB_NAME}.tar.gz" ] || curl -LO https://github.com/nghttp2/nghttp2/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
+util_download_file "$DOWNLOAD_ADRESS" "${INPUT_DIR}/${LIB_NAME}.tar.gz"
 
 set_android_toolchain_bin
 
@@ -55,21 +48,14 @@ function configure_make() {
 
     log_info_print "configure $ABI start..."
 
-    if [ -d "${LIB_NAME}" ]; then
-        rm -fr "${LIB_NAME}"
-    fi
-    tar xfz "${LIB_NAME}.tar.gz"
+    util_unzip "${INPUT_DIR}/${LIB_NAME}.tar.gz" "$INPUT_DIR" "$LIB_NAME"
+
     pushd .
-    cd "${LIB_NAME}"
+    cd "${INPUT_DIR}/${LIB_NAME}"
 
-    PREFIX_DIR="${pwd_path}/../output/android/nghttp2-${ABI}"
-    if [ -d "${PREFIX_DIR}" ]; then
-        rm -fr "${PREFIX_DIR}"
-    fi
-    mkdir -p "${PREFIX_DIR}"
-
-    OUTPUT_ROOT=${TOOLS_ROOT}/../output/android/nghttp2-${ABI}
-    mkdir -p ${OUTPUT_ROOT}/log
+    PREFIX_DIR="${OUTPUT_DIR}/${PLATFORM_TYPE}-${LIB_NAME}-${ABI}"
+    util_remove_dir "$PREFIX_DIR"
+    util_create_dir "${PREFIX_DIR}/log"
 
     set_android_toolchain "nghttp2" "${ARCH}" "${ANDROID_API}"
     set_android_cpu_feature "nghttp2" "${ARCH}" "${ANDROID_API}"
@@ -77,24 +63,24 @@ function configure_make() {
     export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
     echo ANDROID_NDK_HOME=${ANDROID_NDK_HOME}
 
-    android_printf_global_params "$ARCH" "$ABI" "$ABI_TRIPLE" "$PREFIX_DIR" "$OUTPUT_ROOT"
+    android_printf_global_params "$ARCH" "$ABI" "$ABI_TRIPLE" "$INPUT_DIR" "$PREFIX_DIR"
 
     if [[ "${ARCH}" == "x86_64" ]]; then
 
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/${ABI}.log" 2>&1
 
     elif [[ "${ARCH}" == "x86" ]]; then
 
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/${ABI}.log" 2>&1
 
     elif [[ "${ARCH}" == "arm" ]]; then
 
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/${ABI}.log" 2>&1
 
     elif [[ "${ARCH}" == "arm64" ]]; then
 
         # --disable-lib-only need xml2 supc++ stdc++14
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/${ABI}.log" 2>&1
 
     else
         log_error_print "not support" && exit 1
@@ -102,9 +88,9 @@ function configure_make() {
 
     log_info_print "make $ABI start..."
 
-    make clean >>"${OUTPUT_ROOT}/log/${ABI}.log"
-    if make -j$(get_cpu_count) >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1; then
-        make install >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+    make clean >>"${PREFIX_DIR}/log/${ABI}.log"
+    if make -j$(util_get_cpu_count) >>"${PREFIX_DIR}/log/${ABI}.log" 2>&1; then
+        make install >>"${PREFIX_DIR}/log/${ABI}.log" 2>&1
     fi
 
     popd

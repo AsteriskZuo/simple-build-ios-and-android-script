@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./ios-common.sh
+source $(cd -P "$(dirname "$0")" && pwd)/ios-common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null

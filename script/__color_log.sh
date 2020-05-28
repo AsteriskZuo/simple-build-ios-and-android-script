@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./__util.sh
+source $(cd -P "$(dirname "$0")" && pwd)/__util.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -117,7 +117,7 @@ function log_head_print() {
 function log_var_print() {
     local FOREGROUND=$LOG_VAR_FG_SKY_BLUE
     local FONT=$LOG_VAR_BLINK
-    echo "  \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
+    echo "  var \\033[${FOREGROUND};${FONT}m${@}\\033[0m"
 }
 function log_var_split_print() {
     # changed original content for space char

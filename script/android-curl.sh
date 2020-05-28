@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./android-common.sh
+source $(cd -P "$(dirname "$0")" && pwd)/android-common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -43,8 +43,6 @@ echo "https://github.com/curl/curl/releases/download/${LIB_VERSION}/${LIB_NAME}.
 # https://curl.haxx.se/download/${LIB_NAME}.tar.gz
 # https://github.com/curl/curl/releases/download/curl-7_69_0/curl-7.69.0.tar.gz
 # https://github.com/curl/curl/releases/download/curl-7_68_0/curl-7.68.0.tar.gz
-DEVELOPER=$(xcode-select -print-path)
-SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
 rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
 [ -f "${LIB_NAME}.tar.gz" ] || curl -LO https://github.com/curl/curl/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
 
@@ -112,7 +110,7 @@ function configure_make() {
     log_info_print "make $ABI start..."
 
     make clean >>"${OUTPUT_ROOT}/log/${ABI}.log"
-    if make -j$(get_cpu_count) >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1; then
+    if make -j$(util_get_cpu_count) >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1; then
         make install >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
     fi
 

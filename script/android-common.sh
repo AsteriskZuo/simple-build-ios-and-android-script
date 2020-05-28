@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./_common.sh
+source $(cd -P "$(dirname "$0")" && pwd)/_common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -26,9 +26,9 @@ export ABI_TRIPLES=("arm-linux-androideabi" "aarch64-linux-android" "i686-linux-
 export ANDROID_API=23
 
 # for test
-# export ARCHS=("x86_64")
-# export ABIS=("x86_64")
-# export ABI_TRIPLES=("x86_64-linux-android")
+export ARCHS=("x86_64")
+export ABIS=("x86_64")
+export ABI_TRIPLES=("x86_64-linux-android")
 
 if [[ -z ${ANDROID_NDK_ROOT} ]]; then
   echo "ANDROID_NDK_ROOT not defined"

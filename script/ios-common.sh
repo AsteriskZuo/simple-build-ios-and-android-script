@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./_common.sh
+source $(cd -P "$(dirname "$0")" && pwd)/_common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -126,16 +126,17 @@ function ios_printf_global_params() {
     local platform=$3
     local in_dir=$4
     local out_dir=$5
-    echo -e "arch =           $arch"
-    echo -e "type =           $type"
-    echo -e "platform =       $platform"
-    echo -e "PLATFORM_TYPE =  $PLATFORM_TYPE"
-    echo -e "IOS_MIN_TARGET = $IOS_MIN_TARGET"
-    echo -e "in_dir =         $in_dir"
-    echo -e "out_dir =        $out_dir"
-    echo -e "CC =             $CC"
-    echo -e "CXX =            $CXX"
-    echo -e "CFLAGS =         $CFLAGS"
-    echo -e "CXXFLAGS =       $CXXFLAGS"
-    echo -e "LDFLAGS =        $LDFLAGS"
+    log_var_print "arch =           $arch"
+    log_var_print "type =           $type"
+    log_var_print "platform =       $platform"
+    log_var_print "PLATFORM_TYPE =  $PLATFORM_TYPE"
+    log_var_print "IOS_MIN_TARGET = $IOS_MIN_TARGET"
+    log_var_print "in_dir =         $in_dir"
+    log_var_print "out_dir =        $out_dir"
+    log_var_print "CC =             $CC"
+    log_var_print "CXX =            $CXX"
+    log_var_print "CFLAGS =         $CFLAGS"
+    log_var_print "CXXFLAGS =       $CXXFLAGS"
+    log_var_print "LDFLAGS =        $LDFLAGS"
+    echo SHELL_SCRIPT_NAME=$SHELL_SCRIPT_NAME
 }

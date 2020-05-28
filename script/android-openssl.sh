@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source ./android-common.sh
+source $(cd -P "$(dirname "$0")" && pwd)/android-common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
@@ -44,8 +44,6 @@ echo "https://www.openssl.org/source/${LIB_NAME}.tar.gz"
 
 # https://github.com/openssl/openssl/archive/OpenSSL_1_1_1d.tar.gz
 # https://github.com/openssl/openssl/archive/OpenSSL_1_1_1f.tar.gz
-DEVELOPER=$(xcode-select -print-path)
-SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
 rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
 [ -f "${LIB_NAME}.tar.gz" ] || curl https://www.openssl.org/source/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
 
@@ -106,7 +104,7 @@ function configure_make() {
     log_info_print "make $ABI start..."
 
     make clean >"${OUTPUT_ROOT}/log/${ABI}.log"
-    if make -j$(get_cpu_count) >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1; then
+    if make -j$(util_get_cpu_count) >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1; then
         make install_sw >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
         make install_ssldirs >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
     fi
