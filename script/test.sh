@@ -49,4 +49,31 @@ echo "##########################################################################
 # 4
 # "
 # name="2"
-# util_filter "$list"
+# util_filter "$list
+
+# 测试遍历数组
+# COMPONENT_LIST="
+# 1wer
+# 2wer
+# 3sdfsdf
+# 4rwer
+# "
+# for n in $COMPONENT_LIST; do
+#     echo "n=$n"
+# done
+# ret=$(util_get_list_item 3 $COMPONENT_LIST)
+# echo "ret=$ret"
+# common_get_library_name_from_id 4
+
+# 测试间接调用方法
+# function func_name()
+# {
+#     echo $1
+# }
+# var="func_name"
+# eval $var "hahah"
+COMMON_DOWNLOAD_ADRESS="https://github.com/protocolbuffers/protobuf/releases/download/v3.12.2/protobuf-all-3.12.2.tar.gz"
+url_file_name=${COMMON_DOWNLOAD_ADRESS##*/}
+unzip_output_dir=${url_file_name%.tar.gz}
+echo "url_file_name=$url_file_name"
+echo "unzip_output_dir=$unzip_output_dir"

@@ -47,7 +47,7 @@ echo "https://www.openssl.org/source/${LIB_NAME}.tar.gz"
 rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
 [ -f "${LIB_NAME}.tar.gz" ] || curl https://www.openssl.org/source/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
 
-set_android_toolchain_bin
+android_set_toolchain_bin
 
 function configure_make() {
 
@@ -73,8 +73,8 @@ function configure_make() {
     OUTPUT_ROOT=${TOOLS_ROOT}/../output/android/openssl-${ABI}
     mkdir -p ${OUTPUT_ROOT}/log
 
-    set_android_toolchain "openssl" "${ARCH}" "${ANDROID_API}"
-    set_android_cpu_feature "openssl" "${ARCH}" "${ANDROID_API}"
+    android_set_toolchain "openssl" "${ARCH}" "${ANDROID_API}"
+    android_set_cpu_feature "openssl" "${ARCH}" "${ANDROID_API}"
 
     export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
     echo ANDROID_NDK_HOME=${ANDROID_NDK_HOME}

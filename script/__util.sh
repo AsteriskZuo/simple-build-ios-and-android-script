@@ -91,10 +91,23 @@ function util_get_output_dir() {
 }
 
 function util_is_in() {
-    value=$1
+    local value=$1
     shift
     for var in $*; do
         [ $var = $value ] && return 0
+    done
+    return 1
+}
+
+function util_get_list_item() {
+    local index=$1 # from 1 start
+    local i=1
+    shift
+    for var in $*; do
+        if [ "$i" = "$index" ]; then
+            echo "$var" && return 0
+        fi
+        ((i++))
     done
     return 1
 }
@@ -169,4 +182,8 @@ function util_unzip() {
     if [ "no" = ret ]; then
         rm -rf "$zip" && exit 1
     fi
+}
+
+function util_load_script() {
+    source $1 || exit 1
 }
