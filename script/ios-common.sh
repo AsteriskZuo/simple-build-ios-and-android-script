@@ -19,40 +19,49 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
-export PLATFORM_TYPE="iOS"
-export IOS_MIN_TARGET="8.0"
-export ARCHS=("armv7" "arm64" "arm64e" "x86_64")
-export SDKS=("iphoneos" "iphoneos" "iphoneos" "iphonesimulator")
-export PLATFORMS=("iPhoneOS" "iPhoneOS" "iphoneos" "iPhoneSimulator")
+echo "###############################################################################" >/dev/null
+echo "#### Global Variable Partition                                            #####" >/dev/null
+echo "###############################################################################" >/dev/null
 
-# for test !!!
-# export ARCHS=("armv7")
-# export SDKS=("iphoneos")
-# export PLATFORMS=("iPhoneOS")
+export COMMON_PLATFORM_TYPE="ios"
+export IOS_ARCHS=("armv7" "arm64" "arm64e" "x86-64")
+export IOS_TRIPLES=("armv7-ios-darwin" "aarch64-ios-darwin" "aarch64-ios-darwin" "x86_64-ios-darwin")
+export IOS_API=8.0
+export IOS_SYSROOT=""
 
-function get_android_arch() {
-    local common_arch=$1
-    case ${common_arch} in
-    armv7)
-        echo "armv7"
+# for test
+# IOS_ARCHS=("x86-64")
+# IOS_TRIPLES=("x86_64-ios-darwin")
+# IOS_API=8.0
+
+echo "###############################################################################" >/dev/null
+echo "#### Function Partition                                                   #####" >/dev/null
+echo "###############################################################################" >/dev/null
+
+function ios_get_sdk_name() {
+    local arch=$1
+    case ${arch} in
+    armv7 | armv7s | arm64 | arm64e)
+        echo "iphoneos"
         ;;
-    arm64)
-        echo "arm64"
-        ;;
-    arm64e)
-        echo "arm64e"
-        ;;
-    x86)
-        echo "x86"
-        ;;
-    x86_64)
-        echo "x86-64"
+    x86 | x86-64)
+        echo "iphonesimulator"
         ;;
     esac
 }
 
+function ios_get_sdk_path() {
+    local arch=$1
+    echo "$(xcrun --sdk $(ios_get_sdk_name $arch) --show-sdk-path)"
+}
+
+function ios_set_sysroot() {
+    local arch=$1
+    IOS_SYSROOT="$(ios_get_sdk_path $arch)"
+}
+
 function ios_get_build_host() {
-    local arch=$(get_android_arch $1)
+    local arch=$1
     case ${arch} in
     armv7)
         echo "armv7-ios-darwin"
@@ -72,71 +81,124 @@ function ios_get_build_host() {
     esac
 }
 
-function set_android_cpu_feature() {
+function ios_set_cpu_feature() {
     local name=$1
-    local arch=$(get_android_arch $2)
-    local ios_min_target=$3
+    local arch=$2
+    local api=$3
     local sysroot=$4
     case ${arch} in
     armv7)
         export CC="xcrun -sdk iphoneos clang -arch armv7"
         export CXX="xcrun -sdk iphoneos clang++ -arch armv7"
-        export CFLAGS="-arch armv7 -target armv7-ios-darwin -march=armv7 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -Wno-unused-function -fstrict-aliasing -Oz -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -fembed-bitcode -miphoneos-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CFLAGS="-arch armv7 -target armv7-ios-darwin -march=armv7 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -Wno-unused-function -fstrict-aliasing -Oz -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -fembed-bitcode -miphoneos-version-min=${api} -I${sysroot}/usr/include"
         export LDFLAGS="-arch armv7 -target armv7-ios-darwin -march=armv7 -isysroot ${sysroot} -fembed-bitcode -L${sysroot}/usr/lib "
-        export CXXFLAGS="-std=c++14 -arch armv7 -target armv7-ios-darwin -march=armv7 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -fstrict-aliasing -fembed-bitcode -DIOS -miphoneos-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CXXFLAGS="-std=c++14 -arch armv7 -target armv7-ios-darwin -march=armv7 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -fstrict-aliasing -fembed-bitcode -DIOS -miphoneos-version-min=${api} -I${sysroot}/usr/include"
         ;;
     arm64)
         export CC="xcrun -sdk iphoneos clang -arch arm64"
         export CXX="xcrun -sdk iphoneos clang++ -arch arm64"
-        export CFLAGS="-arch arm64 -target aarch64-ios-darwin -march=armv8 -mcpu=generic -Wno-unused-function -fstrict-aliasing -Oz -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -fembed-bitcode -miphoneos-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CFLAGS="-arch arm64 -target aarch64-ios-darwin -march=armv8 -mcpu=generic -Wno-unused-function -fstrict-aliasing -Oz -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -fembed-bitcode -miphoneos-version-min=${api} -I${sysroot}/usr/include"
         export LDFLAGS="-arch arm64 -target aarch64-ios-darwin -march=armv8 -isysroot ${sysroot} -fembed-bitcode -L${sysroot}/usr/lib "
-        export CXXFLAGS="-std=c++14 -arch arm64 -target aarch64-ios-darwin -march=armv8 -mcpu=generic -fstrict-aliasing -fembed-bitcode -DIOS -miphoneos-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CXXFLAGS="-std=c++14 -arch arm64 -target aarch64-ios-darwin -march=armv8 -mcpu=generic -fstrict-aliasing -fembed-bitcode -DIOS -miphoneos-version-min=${api} -I${sysroot}/usr/include"
         ;;
     arm64e)
         # -march=armv8.3 ???
         export CC="xcrun -sdk iphoneos clang -arch arm64e"
         export CXX="xcrun -sdk iphoneos clang++ -arch arm64e"
-        export CFLAGS="-arch arm64e -target aarch64-ios-darwin -Wno-unused-function -fstrict-aliasing -DIOS -isysroot ${sysroot} -fembed-bitcode -miphoneos-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CFLAGS="-arch arm64e -target aarch64-ios-darwin -Wno-unused-function -fstrict-aliasing -DIOS -isysroot ${sysroot} -fembed-bitcode -miphoneos-version-min=${api} -I${sysroot}/usr/include"
         export LDFLAGS="-arch arm64e -target aarch64-ios-darwin -isysroot ${sysroot} -fembed-bitcode -L${sysroot}/usr/lib "
-        export CXXFLAGS="-std=c++14 -arch arm64e -target aarch64-ios-darwin -fstrict-aliasing -fembed-bitcode -DIOS -miphoneos-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CXXFLAGS="-std=c++14 -arch arm64e -target aarch64-ios-darwin -fstrict-aliasing -fembed-bitcode -DIOS -miphoneos-version-min=${api} -I${sysroot}/usr/include"
         ;;
     x86)
         export CC="xcrun -sdk iphonesimulator clang -arch x86"
         export CXX="xcrun -sdk iphonesimulator clang++ -arch x86"
-        export CFLAGS="-arch x86 -target x86-ios-darwin -march=i386 -msse4.2 -mpopcnt -m64 -mtune=intel -Wno-unused-function -fstrict-aliasing -O2 -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -mios-simulator-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CFLAGS="-arch x86 -target x86-ios-darwin -march=i386 -msse4.2 -mpopcnt -m64 -mtune=intel -Wno-unused-function -fstrict-aliasing -O2 -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -mios-simulator-version-min=${api} -I${sysroot}/usr/include"
         export LDFLAGS="-arch x86 -target x86-ios-darwin -march=i386 -isysroot ${sysroot} -L${sysroot}/usr/lib "
-        export CXXFLAGS="-std=c++14 -arch x86 -target x86-ios-darwin -march=i386 -msse4.2 -mpopcnt -m64 -mtune=intel -fstrict-aliasing -DIOS -mios-simulator-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CXXFLAGS="-std=c++14 -arch x86 -target x86-ios-darwin -march=i386 -msse4.2 -mpopcnt -m64 -mtune=intel -fstrict-aliasing -DIOS -mios-simulator-version-min=${api} -I${sysroot}/usr/include"
         ;;
     x86-64)
         export CC="xcrun -sdk iphonesimulator clang -arch x86_64"
         export CXX="xcrun -sdk iphonesimulator clang++ -arch x86_64"
-        export CFLAGS="-arch x86_64 -target x86_64-ios-darwin -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -Wno-unused-function -fstrict-aliasing -O2 -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -mios-simulator-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CFLAGS="-arch x86_64 -target x86_64-ios-darwin -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -Wno-unused-function -fstrict-aliasing -O2 -Wno-ignored-optimization-argument -DIOS -isysroot ${sysroot} -mios-simulator-version-min=${api} -I${sysroot}/usr/include"
         export LDFLAGS="-arch x86_64 -target x86_64-ios-darwin -march=x86-64 -isysroot ${sysroot} -L${sysroot}/usr/lib "
-        export CXXFLAGS="-std=c++14 -arch x86_64 -target x86_64-ios-darwin -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -fstrict-aliasing -DIOS -mios-simulator-version-min=${ios_min_target} -I${sysroot}/usr/include"
+        export CXXFLAGS="-std=c++14 -arch x86_64 -target x86_64-ios-darwin -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -fstrict-aliasing -DIOS -mios-simulator-version-min=${api} -I${sysroot}/usr/include"
         ;;
     *)
-        log_error_print "not support" && exit 1
+        common_die "not support $arch"
         ;;
     esac
 }
 
-function ios_printf_global_params() {
-    local arch=$1
-    local type=$2
-    local platform=$3
-    local in_dir=$4
-    local out_dir=$5
-    log_var_print "arch =           $arch"
-    log_var_print "type =           $type"
-    log_var_print "platform =       $platform"
-    log_var_print "PLATFORM_TYPE =  $PLATFORM_TYPE"
-    log_var_print "IOS_MIN_TARGET = $IOS_MIN_TARGET"
-    log_var_print "in_dir =         $in_dir"
-    log_var_print "out_dir =        $out_dir"
+function ios_printf_variable() {
+    log_var_print "IOS_ARCHS =    ${IOS_ARCHS[@]}"
+    log_var_print "IOS_TRIPLES =  ${IOS_TRIPLES[@]}"
+    log_var_print "IOS_API =      $IOS_API"
+}
+
+function ios_printf_arch_variable() {
+    log_var_print "IOS_SYSROOT =    $IOS_SYSROOT"
     log_var_print "CC =             $CC"
     log_var_print "CXX =            $CXX"
     log_var_print "CFLAGS =         $CFLAGS"
     log_var_print "CXXFLAGS =       $CXXFLAGS"
     log_var_print "LDFLAGS =        $LDFLAGS"
-    echo SHELL_SCRIPT_NAME=$SHELL_SCRIPT_NAME
+}
+
+function ios_help() {
+    common_help
+}
+
+function ios_get_shell_script_path() {
+    echo "${COMMON_SCRIPT_DIR}/$(util_tolower $COMMON_PLATFORM_TYPE)-${COMMON_LIBRARY_NAME}.sh"
+}
+
+echo "###############################################################################" >/dev/null
+echo "#### Flow Function Partition                                              #####" >/dev/null
+echo "###############################################################################" >/dev/null
+
+function ios_pre_tool_check() {
+    log_info_print "ios_pre_tool_check $1 start..."
+    local library_id=$1
+    local pre_tool_check="ios_${COMMON_LIBRARY_NAME}_pre_tool_check"
+    common_pre_tool_check "$library_id"
+    eval ${pre_tool_check} "$library_id"
+    log_info_print "ios_pre_tool_check $1 end..."
+}
+
+function ios_pre_download_zip() {
+    log_info_print "ios_pre_download_zip $1 start..."
+    local library_id=$1
+    local pre_download_zip="ios_${COMMON_LIBRARY_NAME}_pre_download_zip"
+    common_pre_download_zip "$library_id"
+    eval ${pre_download_zip} "$library_id"
+    log_info_print "ios_pre_download_zip $1 end..."
+}
+
+function ios_build_unzip() {
+    log_info_print "ios_build_unzip $1 $2 start..."
+    local library_id=$1
+    local library_arch=$2
+    local build_unzip="ios_${COMMON_LIBRARY_NAME}_build_unzip"
+    common_build_unzip "$library_id"
+    eval ${build_unzip} "$library_id"
+    log_info_print "ios_build_unzip $1 $2 end..."
+}
+
+function ios_build_config_make() {
+    log_info_print "ios_build_config_make $1 $2 start..."
+    local library_id=$1
+    local library_arch=$2
+    local build_config_make="ios_${COMMON_LIBRARY_NAME}_build_config_make"
+    common_build_config_make "$library_id" "$library_arch"
+    eval ${build_config_make} "$library_id" "$library_arch"
+    log_info_print "ios_build_config_make $1 $2 end..."
+}
+
+function ios_archive() {
+    log_info_print "ios_archive $1 start..."
+    local library_id=$1
+    local archive="ios_${COMMON_LIBRARY_NAME}_archive"
+    common_archive "$library_id"
+    eval ${archive} "$library_id"
+    log_info_print "ios_archive $1 end..."
 }

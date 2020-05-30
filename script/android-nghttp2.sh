@@ -45,8 +45,8 @@ function android_nghttp2_pre_tool_check() {
   nghttp2_zip_file_path="${nghttp2_input_dir}/${nghttp2_zip_file}"
   nghttp2_zip_file_no_suffix_path="${nghttp2_input_dir}/${nghttp2_zip_file_no_suffix}"
 
-  mkdir -p "${nghttp2_input_dir}"
-  mkdir -p "${nghttp2_output_dir}"
+  util_create_dir "${nghttp2_input_dir}"
+  util_create_dir "${nghttp2_output_dir}"
 
   android_nghttp2_printf_variable
 
@@ -69,8 +69,8 @@ function android_nghttp2_build_config_make() {
   export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
 
   local library_arch_path="${nghttp2_output_dir}/${library_arch}"
-  rm -rf "$library_arch_path"
-  mkdir -p "${library_arch_path}/log"
+  util_remove_dir "$library_arch_path"
+  util_create_dir "${library_arch_path}/log"
 
   android_set_toolchain "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
   android_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"

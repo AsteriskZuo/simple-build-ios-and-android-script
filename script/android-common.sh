@@ -154,6 +154,9 @@ function android_set_cpu_feature() {
     export LDFLAGS="-march=x86-64 -Wl,--gc-sections -Os -ffunction-sections -fdata-sections $(android_get_common_linked_libraries ${api} ${arch})"
     export CPPFLAGS=${CFLAGS}
     ;;
+  *)
+    common_die "not support $arch"
+    ;;
   esac
 }
 

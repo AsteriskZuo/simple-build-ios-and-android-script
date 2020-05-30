@@ -121,3 +121,10 @@ echo "##########################################################################
 #     echo "hjss"
 # }
 # test
+
+# 测试if双条件
+count1=0
+count2=1
+if test $count1 -gt 0 && test $count2 -gt 0 ; then
+    echo "ok"
+fi

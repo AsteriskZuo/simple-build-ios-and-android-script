@@ -1,7 +1,5 @@
 #!/bin/sh
 
-source $(cd -P "$(dirname "$0")" && pwd)/ios-common.sh
-
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
 echo "# Author:                  yu.zuo                                             #" >/dev/null
@@ -10,7 +8,7 @@ echo "# Script version:          1.0.0                                          
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Brief introduction:                                                         #" >/dev/null
-echo "# Build iOS and Android C&&C++ common library.                                #" >/dev/null
+echo "# Build ios nghttp2 shell script.                                             #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Prerequisites:                                                              #" >/dev/null
 echo "# GNU bash (version 3.2.57 test success on macOS)                             #" >/dev/null
@@ -19,117 +17,107 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
-set -u
+# set -x
 
-TOOLS_ROOT=$(pwd)
+nghttp2_zip_file=""
+nghttp2_zip_file_no_suffix=""
+nghttp2_zip_file_path=""
+nghttp2_zip_file_no_suffix_path=""
+nghttp2_input_dir=""
+nghttp2_output_dir=""
 
-SOURCE="$0"
-while [ -h "$SOURCE" ]; do
-    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-pwd_path="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+function ios_nghttp2_printf_variable() {
+    log_var_print "nghttp2_input_dir =                $nghttp2_input_dir"
+    log_var_print "nghttp2_output_dir =               $nghttp2_output_dir"
+    log_var_print "nghttp2_zip_file =                 $nghttp2_zip_file"
+    log_var_print "nghttp2_zip_file_no_suffix =       $nghttp2_zip_file_no_suffix"
+    log_var_print "nghttp2_zip_file_path =            $nghttp2_zip_file_path"
+    log_var_print "nghttp2_zip_file_no_suffix_path =  $nghttp2_zip_file_no_suffix_path"
+}
 
-echo pwd_path=${pwd_path}
-echo TOOLS_ROOT=${TOOLS_ROOT}
+function ios_nghttp2_pre_tool_check() {
 
-LIB_VERSION="v1.40.0"
-LIB_NAME="nghttp2-1.40.0"
-LIB_DEST_DIR="${pwd_path}/../output/ios/nghttp2-universal"
+    nghttp2_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
+    nghttp2_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/${COMMON_LIBRARY_NAME}"
 
-echo "https://github.com/nghttp2/nghttp2/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz"
+    nghttp2_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
+    nghttp2_zip_file_no_suffix=${nghttp2_zip_file%.tar.gz}
+    nghttp2_zip_file_path="${nghttp2_input_dir}/${nghttp2_zip_file}"
+    nghttp2_zip_file_no_suffix_path="${nghttp2_input_dir}/${nghttp2_zip_file_no_suffix}"
 
-DEVELOPER=$(xcode-select -print-path)
-SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
-rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
-[ -f "${LIB_NAME}.tar.gz" ] || curl -LO https://github.com/nghttp2/nghttp2/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
+    util_create_dir "${nghttp2_input_dir}"
+    util_create_dir "${nghttp2_output_dir}"
 
-function configure_make() {
+    ios_nghttp2_printf_variable
 
-    ARCH=$1
-    SDK=$2
-    PLATFORM=$3
+}
 
-    log_info_print "configure $ARCH start..."
+function ios_nghttp2_pre_download_zip() {
+    local library_id=$1
+    util_download_file "$COMMON_DOWNLOAD_ADRESS" "$nghttp2_zip_file_path"
+}
 
-    if [ -d "${LIB_NAME}" ]; then
-        rm -fr "${LIB_NAME}"
-    fi
-    tar xfz "${LIB_NAME}.tar.gz"
+function ios_nghttp2_build_unzip() {
+    local library_id=$1
+    util_unzip "$nghttp2_zip_file_path" "${nghttp2_input_dir}" "$nghttp2_zip_file_no_suffix"
+}
+
+function ios_nghttp2_build_config_make() {
+    local library_id=$1
+    local library_arch=$2
+
+    local library_arch_path="${nghttp2_output_dir}/${library_arch}"
+    util_remove_dir "$library_arch_path"
+    util_create_dir "${library_arch_path}/log"
+
+    ios_set_sysroot "${library_arch}"
+    ios_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${IOS_API}" "${IOS_SYSROOT}"
+
+    ios_printf_arch_variable
+
     pushd .
-    cd "${LIB_NAME}"
+    cd "$nghttp2_zip_file_no_suffix_path"
 
-    export CROSS_TOP="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
-    export CROSS_SDK="${PLATFORM}${SDK_VERSION}.sdk"
+    if [[ "${library_arch}" == "x86-64" ]]; then
 
-    if [ ! -d ${CROSS_TOP}/SDKs/${CROSS_SDK} ]; then
-        log_error_print "ERROR: iOS SDK version:'${SDK_VERSION}' incorrect, SDK in your system is:"
-        xcodebuild -showsdks | grep iOS
-        exit -1
-    fi
+        ./configure --host=$(ios_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-    PREFIX_DIR="${pwd_path}/../output/ios/nghttp2-${ARCH}"
-    if [ -d "${PREFIX_DIR}" ]; then
-        rm -fr "${PREFIX_DIR}"
-    fi
-    mkdir -p "${PREFIX_DIR}"
+    elif [[ "${library_arch}" == "armv7" ]]; then
 
-    OUTPUT_ROOT=${TOOLS_ROOT}/../output/ios/nghttp2-${ARCH}
-    mkdir -p ${OUTPUT_ROOT}/log
+        ./configure --host=$(ios_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-    set_android_cpu_feature "nghttp2" "${ARCH}" "${IOS_MIN_TARGET}" "${CROSS_TOP}/SDKs/${CROSS_SDK}"
+    elif [[ "${library_arch}" == "arm64" ]]; then
 
-    ios_printf_global_params "$ARCH" "$SDK" "$PLATFORM" "$PREFIX_DIR" "$OUTPUT_ROOT"
+        ./configure --host=$(ios_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-    if [[ "${ARCH}" == "x86_64" ]]; then
+    elif [[ "${library_arch}" == "arm64e" ]]; then
 
-        ./configure --host=$(ios_get_build_host "$ARCH") --prefix="${PREFIX_DIR}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
-
-    elif [[ "${ARCH}" == "armv7" ]]; then
-
-        ./configure --host=$(ios_get_build_host "$ARCH") --prefix="${PREFIX_DIR}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
-
-    elif [[ "${ARCH}" == "arm64" ]]; then
-
-        ./configure --host=$(ios_get_build_host "$ARCH") --prefix="${PREFIX_DIR}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
-
-    elif [[ "${ARCH}" == "arm64e" ]]; then
-
-        ./configure --host=$(ios_get_build_host "$ARCH") --prefix="${PREFIX_DIR}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
+        ./configure --host=$(ios_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     else
-        log_error_print "not support" && exit 1
+        common_die "not support $library_arch"
     fi
 
-    log_info_print "make $ARCH start..."
-
-    make clean >>"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
-    if make -j8 >>"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1; then
-        make install >>"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
+    make clean >>"${library_arch_path}/log/output.log"
+    if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
+        make install >>"${library_arch_path}/log/output.log" 2>&1
     fi
 
     popd
 }
 
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} start..."
-
-for ((i = 0; i < ${#ARCHS[@]}; i++)); do
-    if [[ $# -eq 0 || "$1" == "${ARCHS[i]}" ]]; then
-        configure_make "${ARCHS[i]}" "${SDKS[i]}" "${PLATFORMS[i]}"
+function ios_nghttp2_archive() {
+    local library_id=$1
+    local static_library_list=()
+    for ((i = 0; i < ${#IOS_ARCHS[@]}; i++)); do
+        local static_library_file_path="${nghttp2_output_dir}/${IOS_ARCHS[i]}/lib/lib${COMMON_LIBRARY_NAME}.a"
+        if [ -f "$static_library_file_path" ]; then
+            static_library_list[${#static_library_list[@]}]="$static_library_file_path"
+        fi
+    done
+    if [ 0 -lt ${#static_library_list[@]} ]; then
+        util_remove_dir "${nghttp2_output_dir}/lipo"
+        util_create_dir "${nghttp2_output_dir}/lipo"
+        lipo ${static_library_list[@]} -create -output "${nghttp2_output_dir}/lipo/lib${COMMON_LIBRARY_NAME}-universal.a"
     fi
-done
-
-log_info_print "lipo start..."
-
-function lipo_library() {
-    LIB_SRC=$1
-    LIB_DST=$2
-    LIB_PATHS=("${ARCHS[@]/#/${pwd_path}/../output/ios/nghttp2-}")
-    LIB_PATHS=("${LIB_PATHS[@]/%//lib/${LIB_SRC}}")
-    lipo ${LIB_PATHS[@]} -create -output "${LIB_DST}"
 }
-mkdir -p "${LIB_DEST_DIR}"
-lipo_library "libnghttp2.a" "${LIB_DEST_DIR}/libnghttp2-universal.a"
-
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} end..."

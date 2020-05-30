@@ -1,7 +1,5 @@
 #!/bin/sh
 
-source $(cd -P "$(dirname "$0")" && pwd)/ios-common.sh
-
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
 echo "# Author:                  yu.zuo                                             #" >/dev/null
@@ -10,7 +8,7 @@ echo "# Script version:          1.0.0                                          
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Brief introduction:                                                         #" >/dev/null
-echo "# Build iOS and Android C&&C++ common library.                                #" >/dev/null
+echo "# Build ios openssl shell script.                                             #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Prerequisites:                                                              #" >/dev/null
 echo "# GNU bash (version 3.2.57 test success on macOS)                             #" >/dev/null
@@ -19,132 +17,116 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
-set -u
+# set -x
 
-TOOLS_ROOT=$(pwd)
+openssl_zip_file=""
+openssl_zip_file_no_suffix=""
+openssl_zip_file_path=""
+openssl_zip_file_no_suffix_path=""
+openssl_input_dir=""
+openssl_output_dir=""
 
-SOURCE="$0"
-while [ -h "$SOURCE" ]; do
-    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-pwd_path="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+function ios_openssl_printf_variable() {
+    log_var_print "openssl_input_dir =                $openssl_input_dir"
+    log_var_print "openssl_output_dir =               $openssl_output_dir"
+    log_var_print "openssl_zip_file =                 $openssl_zip_file"
+    log_var_print "openssl_zip_file_no_suffix =       $openssl_zip_file_no_suffix"
+    log_var_print "openssl_zip_file_path =            $openssl_zip_file_path"
+    log_var_print "openssl_zip_file_no_suffix_path =  $openssl_zip_file_no_suffix_path"
+}
 
-echo pwd_path=${pwd_path}
-echo TOOLS_ROOT=${TOOLS_ROOT}
+function ios_openssl_pre_tool_check() {
 
-# openssl-1.1.0f has a configure bug
-# openssl-1.1.1d has fix configure bug
-LIB_VERSION="OpenSSL_1_1_1d"
-LIB_NAME="openssl-1.1.1d"
-LIB_DEST_DIR="${pwd_path}/../output/ios/openssl-universal"
+    openssl_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
+    openssl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/${COMMON_LIBRARY_NAME}"
 
-echo "https://www.openssl.org/source/${LIB_NAME}.tar.gz"
+    openssl_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
+    openssl_zip_file_no_suffix=${openssl_zip_file%.tar.gz}
+    openssl_zip_file_path="${openssl_input_dir}/${openssl_zip_file}"
+    openssl_zip_file_no_suffix_path="${openssl_input_dir}/${openssl_zip_file_no_suffix}"
 
-# https://github.com/openssl/openssl/archive/OpenSSL_1_1_1d.tar.gz
-# https://github.com/openssl/openssl/archive/OpenSSL_1_1_1f.tar.gz
-DEVELOPER=$(xcode-select -print-path)
-SDK_VERSION=$(xcrun -sdk iphoneos --show-sdk-version)
-rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
-[ -f "${LIB_NAME}.tar.gz" ] || curl https://www.openssl.org/source/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
+    util_create_dir "${openssl_input_dir}"
+    util_create_dir "${openssl_output_dir}"
 
-function configure_make() {
+    ios_openssl_printf_variable
 
-    ARCH=$1
-    SDK=$2
-    PLATFORM=$3
+}
 
-    log_info_print "configure $ARCH start..."
+function ios_openssl_pre_download_zip() {
+    local library_id=$1
+    util_download_file "$COMMON_DOWNLOAD_ADRESS" "$openssl_zip_file_path"
+}
 
-    if [ -d "${LIB_NAME}" ]; then
-        rm -fr "${LIB_NAME}"
-    fi
-    tar xfz "${LIB_NAME}.tar.gz"
+function ios_openssl_build_unzip() {
+    local library_id=$1
+    util_unzip "$openssl_zip_file_path" "${openssl_input_dir}" "$openssl_zip_file_no_suffix"
+}
+
+function ios_openssl_build_config_make() {
+    local library_id=$1
+    local library_arch=$2
+
+    local library_arch_path="${openssl_output_dir}/${library_arch}"
+    util_remove_dir "$library_arch_path"
+    util_create_dir "${library_arch_path}/log"
+
+    ios_set_sysroot "${library_arch}"
+    ios_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${IOS_API}" "${IOS_SYSROOT}"
+
+    ios_printf_arch_variable
+
     pushd .
-    cd "${LIB_NAME}"
+    cd "$openssl_zip_file_no_suffix_path"
 
-    export CROSS_TOP="${DEVELOPER}/Platforms/${PLATFORM}.platform/Developer"
-    export CROSS_SDK="${PLATFORM}${SDK_VERSION}.sdk"
+    # openssl1.1.1d can be set normally, 1.1.0f does not take effect
+    # sed -ie "s!-fno-common!-fno-common -fembed-bitcode !" "Makefile"
+    if [[ "${library_arch}" == "x86-64" ]]; then
 
-    if [ ! -d ${CROSS_TOP}/SDKs/${CROSS_SDK} ]; then
-        log_error_print "ERROR: iOS SDK version:'${SDK_VERSION}' incorrect, SDK in your system is:"
-        xcodebuild -showsdks | grep iOS
-        exit -1
-    fi
+        ./Configure darwin64-x86_64-cc no-shared --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-    PREFIX_DIR="${pwd_path}/../output/ios/openssl-${ARCH}"
-    if [ -d "${PREFIX_DIR}" ]; then
-        rm -fr "${PREFIX_DIR}"
-    fi
-    mkdir -p "${PREFIX_DIR}"
+    elif [[ "${library_arch}" == "armv7" ]]; then
 
-    OUTPUT_ROOT=${TOOLS_ROOT}/../output/ios/openssl-${ARCH}
-    mkdir -p ${OUTPUT_ROOT}/log
+        ./Configure iphoneos-cross no-shared --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-    set_android_cpu_feature "nghttp2" "${ARCH}" "${IOS_MIN_TARGET}" "${CROSS_TOP}/SDKs/${CROSS_SDK}"
-    
-    ios_printf_global_params "$ARCH" "$SDK" "$PLATFORM" "$PREFIX_DIR" "$OUTPUT_ROOT"
+    elif [[ "${library_arch}" == "arm64" ]]; then
 
-    unset IPHONEOS_DEPLOYMENT_TARGET
+        ./Configure iphoneos-cross no-shared --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-    if [[ "${ARCH}" == "x86_64" ]]; then
+    elif [[ "${library_arch}" == "arm64e" ]]; then
 
-        # openssl1.1.1d can be set normally, 1.1.0f does not take effect
-        ./Configure darwin64-x86_64-cc no-shared --prefix="${PREFIX_DIR}"
-
-    elif [[ "${ARCH}" == "armv7" ]]; then
-
-        # openssl1.1.1d can be set normally, 1.1.0f does not take effect
-        ./Configure iphoneos-cross no-shared --prefix="${PREFIX_DIR}"
-        sed -ie "s!-fno-common!-fno-common -fembed-bitcode !" "Makefile"
-
-    elif [[ "${ARCH}" == "arm64" ]]; then
-
-        # openssl1.1.1d can be set normally, 1.1.0f does not take effect
-        ./Configure iphoneos-cross no-shared --prefix="${PREFIX_DIR}"
-        sed -ie "s!-fno-common!-fno-common -fembed-bitcode !" "Makefile"
-
-    elif [[ "${ARCH}" == "arm64e" ]]; then
-
-        # openssl1.1.1d can be set normally, 1.1.0f does not take effect
-        ./Configure iphoneos-cross no-shared --prefix="${PREFIX_DIR}"
-        sed -ie "s!-fno-common!-fno-common -fembed-bitcode !" "Makefile"
+        ./Configure iphoneos-cross no-shared --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     else
-        log_error_print "not support" && exit 1
+        common_die "not support $library_arch"
     fi
 
-    log_info_print "make $ARCH start..."
-
-    make clean >"${OUTPUT_ROOT}/log/${ARCH}.log"
-    if make -j8 >>"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1; then
-        make install_sw >>"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
-        make install_ssldirs >>"${OUTPUT_ROOT}/log/${ARCH}.log" 2>&1
+    make clean >>"${library_arch_path}/log/output.log"
+    if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
+        make install_sw >>"${library_arch_path}/log/output.log" 2>&1
+        make install_ssldirs >>"${library_arch_path}/log/output.log" 2>&1
     fi
 
     popd
 }
 
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} start..."
-
-for ((i = 0; i < ${#ARCHS[@]}; i++)); do
-    if [[ $# -eq 0 || "$1" == "${ARCHS[i]}" ]]; then
-        configure_make "${ARCHS[i]}" "${SDKS[i]}" "${PLATFORMS[i]}"
+function ios_openssl_archive() {
+    local library_id=$1
+    local static_library_ssl_list=()
+    local static_library_crypto_list=()
+    for ((i = 0; i < ${#IOS_ARCHS[@]}; i++)); do
+        local static_library_file_path_ssl="${openssl_output_dir}/${IOS_ARCHS[i]}/lib/libssl.a"
+        if [ -f "$static_library_file_path_ssl" ]; then
+            static_library_ssl_list[${#static_library_ssl_list[@]}]="$static_library_file_path_ssl"
+        fi
+        local static_library_file_path_crypto="${openssl_output_dir}/${IOS_ARCHS[i]}/lib/libcrypto.a"
+        if [ -f "$static_library_file_path_crypto" ]; then
+            static_library_crypto_list[${#static_library_crypto_list[@]}]="$static_library_file_path_crypto"
+        fi
+    done
+    if test ${#static_library_ssl_list[@]} -gt 0 && test ${#static_library_crypto_list[@]} -gt 0; then
+        util_remove_dir "${openssl_output_dir}/lipo"
+        util_create_dir "${openssl_output_dir}/lipo"
+        lipo ${static_library_ssl_list[@]} -create -output "${openssl_output_dir}/lipo/libssl-universal.a"
+        lipo ${static_library_crypto_list[@]} -create -output "${openssl_output_dir}/lipo/libcrypto-universal.a"
     fi
-done
-
-log_info_print "lipo start..."
-
-function lipo_library() {
-    LIB_SRC=$1
-    LIB_DST=$2
-    LIB_PATHS=("${ARCHS[@]/#/${pwd_path}/../output/ios/openssl-}")
-    LIB_PATHS=("${LIB_PATHS[@]/%//lib/${LIB_SRC}}")
-    lipo ${LIB_PATHS[@]} -create -output "${LIB_DST}"
 }
-mkdir -p "${LIB_DEST_DIR}"
-lipo_library "libcrypto.a" "${LIB_DEST_DIR}/libcrypto-universal.a"
-lipo_library "libssl.a" "${LIB_DEST_DIR}/libssl-universal.a"
-
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} end..."

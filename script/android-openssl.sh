@@ -45,8 +45,8 @@ function android_openssl_pre_tool_check() {
     openssl_zip_file_path="${openssl_input_dir}/${openssl_zip_file}"
     openssl_zip_file_no_suffix_path="${openssl_input_dir}/${openssl_zip_file_no_suffix}"
 
-    mkdir -p "${openssl_input_dir}"
-    mkdir -p "${openssl_output_dir}"
+    util_create_dir "${openssl_input_dir}"
+    util_create_dir "${openssl_output_dir}"
 
     android_openssl_printf_variable
 
@@ -69,8 +69,8 @@ function android_openssl_build_config_make() {
     export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
 
     local library_arch_path="${openssl_output_dir}/${library_arch}"
-    rm -rf "$library_arch_path"
-    mkdir -p "${library_arch_path}/log"
+    util_remove_dir "$library_arch_path"
+    util_create_dir "${library_arch_path}/log"
 
     android_set_toolchain "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
     android_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
