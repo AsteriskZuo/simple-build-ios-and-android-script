@@ -1,7 +1,5 @@
 #!/bin/sh
 
-source $(cd -P "$(dirname "$0")" && pwd)/android-common.sh
-
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
 echo "# Author:                  yu.zuo                                             #" >/dev/null
@@ -10,7 +8,7 @@ echo "# Script version:          1.0.0                                          
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Brief introduction:                                                         #" >/dev/null
-echo "# Build iOS and Android C&&C++ common library.                                #" >/dev/null
+echo "# Build android curl shell script.                                            #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Prerequisites:                                                              #" >/dev/null
 echo "# GNU bash (version 3.2.57 test success on macOS)                             #" >/dev/null
@@ -19,110 +17,122 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
-set -u
+# set -x
 
-TOOLS_ROOT=$(pwd)
+curl_zip_file=""
+curl_zip_file_no_suffix=""
+curl_zip_file_path=""
+curl_zip_file_no_suffix_path=""
+curl_input_dir=""
+curl_output_dir=""
+openssl_output_dir=""
+nghttp2_output_dir=""
 
-SOURCE="$0"
-while [ -h "$SOURCE" ]; do
-    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-pwd_path="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+function android_curl_printf_variable() {
+    log_var_print "curl_input_dir =                $curl_input_dir"
+    log_var_print "curl_output_dir =               $curl_output_dir"
+    log_var_print "curl_zip_file =                 $curl_zip_file"
+    log_var_print "curl_zip_file_no_suffix =       $curl_zip_file_no_suffix"
+    log_var_print "curl_zip_file_path =            $curl_zip_file_path"
+    log_var_print "curl_zip_file_no_suffix_path =  $curl_zip_file_no_suffix_path"
+    log_var_print "openssl_output_dir =            $openssl_output_dir"
+    log_var_print "nghttp2_output_dir =            $nghttp2_output_dir"
+}
 
-echo pwd_path=${pwd_path}
-echo TOOLS_ROOT=${TOOLS_ROOT}
+function android_curl_pre_tool_check() {
 
-LIB_VERSION="curl-7_68_0"
-LIB_NAME="curl-7.68.0"
-LIB_DEST_DIR="${pwd_path}/../output/android/curl-universal"
-
-echo "https://github.com/curl/curl/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz"
-
-# https://curl.haxx.se/download/${LIB_NAME}.tar.gz
-# https://github.com/curl/curl/releases/download/curl-7_69_0/curl-7.69.0.tar.gz
-# https://github.com/curl/curl/releases/download/curl-7_68_0/curl-7.68.0.tar.gz
-rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
-[ -f "${LIB_NAME}.tar.gz" ] || curl -LO https://github.com/curl/curl/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
-
-android_set_toolchain_bin
-
-function configure_make() {
-
-    ARCH=$1
-    ABI=$2
-    ABI_TRIPLE=$3
-
-    log_info_print "configure $ABI start..."
-
-    if [ -d "${LIB_NAME}" ]; then
-        rm -fr "${LIB_NAME}"
+    openssl_output_dir="${COMMON_OUTPUT_DIR}/$(common_get_library_name_from_id 1)"
+    if [ ! -d "${openssl_output_dir}" ]; then
+        common_die "Please build the openssl library first!"
     fi
-    tar xfz "${LIB_NAME}.tar.gz"
-    pushd .
-    cd "${LIB_NAME}"
-
-    PREFIX_DIR="${pwd_path}/../output/android/curl-${ABI}"
-    if [ -d "${PREFIX_DIR}" ]; then
-        rm -fr "${PREFIX_DIR}"
+    nghttp2_output_dir="${COMMON_OUTPUT_DIR}/$(common_get_library_name_from_id 2)"
+    if [ ! -d "${nghttp2_output_dir}" ]; then
+        common_die "Please build the nghttp2 library first!"
     fi
-    mkdir -p "${PREFIX_DIR}"
 
-    OUTPUT_ROOT=${TOOLS_ROOT}/../output/android/curl-${ABI}
-    mkdir -p ${OUTPUT_ROOT}/log
+    curl_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
+    curl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_LIBRARY_NAME}"
 
-    android_set_toolchain "curl" "${ARCH}" "${ANDROID_API}"
-    android_set_cpu_feature "curl" "${ARCH}" "${ANDROID_API}"
+    curl_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
+    curl_zip_file_no_suffix=${curl_zip_file%.tar.gz}
+    curl_zip_file_path="${curl_input_dir}/${curl_zip_file}"
+    curl_zip_file_no_suffix_path="${curl_input_dir}/${curl_zip_file_no_suffix}"
+
+    mkdir -p "${curl_input_dir}"
+    mkdir -p "${curl_output_dir}"
+
+    android_curl_printf_variable
+
+}
+
+function android_curl_pre_download_zip() {
+    local library_id=$1
+    util_download_file "$COMMON_DOWNLOAD_ADRESS" "$curl_zip_file_path"
+}
+
+function android_curl_build_unzip() {
+    local library_id=$1
+    util_unzip "$curl_zip_file_path" "${curl_input_dir}" "$curl_zip_file_no_suffix"
+}
+
+function android_curl_build_config_make() {
+    local library_id=$1
+    local library_arch=$2
 
     export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
-    echo ANDROID_NDK_HOME=${ANDROID_NDK_HOME}
 
-    OPENSSL_OUT_DIR="${pwd_path}/../output/android/openssl-${ABI}"
-    NGHTTP2_OUT_DIR="${pwd_path}/../output/android/nghttp2-${ABI}"
+    local library_arch_path="${curl_output_dir}/${library_arch}"
+    rm -rf "$library_arch_path"
+    mkdir -p "${library_arch_path}/log"
 
-    export LDFLAGS="${LDFLAGS} -L${OPENSSL_OUT_DIR}/lib -L${NGHTTP2_OUT_DIR}/lib"
-    # export LDFLAGS="-Wl,-rpath-link,-L${NGHTTP2_OUT_DIR}/lib,-L${OPENSSL_OUT_DIR}/lib $LDFLAGS "
+    android_set_toolchain "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
+    android_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
 
-    android_printf_global_params "$ARCH" "$ABI" "$ABI_TRIPLE" "$PREFIX_DIR" "$OUTPUT_ROOT"
-
-    if [[ "${ARCH}" == "x86_64" ]]; then
-
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
-
-    elif [[ "${ARCH}" == "x86" ]]; then
-
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
-
-    elif [[ "${ARCH}" == "arm" ]]; then
-
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
-
-    elif [[ "${ARCH}" == "arm64" ]]; then
-
-        # --enable-shared need nghttp2 cpp compile
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-shared --enable-ipv6 --with-ssl=${OPENSSL_OUT_DIR} --with-nghttp2=${NGHTTP2_OUT_DIR} >"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
-
-    else
-        log_error_print "not support" && exit 1
+    openssl_output_arch_lib_dir="${openssl_output_dir}/${library_arch}/lib"
+    if [ ! -d "${openssl_output_arch_lib_dir}" ]; then
+        common_die "Please build the openssl ${library_arch} library first!"
+    fi
+    nghttp2_output_arch_lib_dir="${nghttp2_output_dir}/${library_arch}/lib"
+    if [ ! -d "${nghttp2_output_arch_lib_dir}" ]; then
+        common_die "Please build the nghttp2 ${library_arch} library first!"
     fi
 
-    log_info_print "make $ABI start..."
+    export LDFLAGS="${LDFLAGS} -L${openssl_output_arch_lib_dir} -L${nghttp2_output_arch_lib_dir}"
 
-    make clean >>"${OUTPUT_ROOT}/log/${ABI}.log"
-    if make -j$(util_get_cpu_count) >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1; then
-        make install >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+    android_printf_arch_variable
+
+    pushd .
+    cd "$curl_zip_file_no_suffix_path"
+
+    if [[ "${library_arch}" == "x86-64" ]]; then
+
+        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --enable-ipv6 --with-ssl="${openssl_output_dir}/${library_arch}" --with-nghttp2="${nghttp2_output_dir}/${library_arch}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+    elif [[ "${library_arch}" == "x86" ]]; then
+
+        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --enable-ipv6 --with-ssl="${openssl_output_dir}/${library_arch}" --with-nghttp2="${nghttp2_output_dir}/${library_arch}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+    elif [[ "${library_arch}" == "armeabi-v7a" ]]; then
+
+        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --enable-ipv6 --with-ssl="${openssl_output_dir}/${library_arch}" --with-nghttp2="${nghttp2_output_dir}/${library_arch}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+    elif [[ "${library_arch}" == "arm64-v8a" ]]; then
+
+        # --enable-shared need nghttp2 cpp compile
+        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --enable-ipv6 --with-ssl="${openssl_output_dir}/${library_arch}" --with-nghttp2="${nghttp2_output_dir}/${library_arch}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+    else
+        common_die "not support $library_arch"
+    fi
+
+    make clean >>"${library_arch_path}/log/output.log"
+    if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
+        make install >>"${library_arch_path}/log/output.log" 2>&1
     fi
 
     popd
 }
 
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} start..."
-
-for ((i = 0; i < ${#ARCHS[@]}; i++)); do
-    if [[ $# -eq 0 || "$1" == "${ARCHS[i]}" ]]; then
-        configure_make "${ARCHS[i]}" "${ABIS[i]}" "${ABI_TRIPLES[i]}"
-    fi
-done
-
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} end..."
+function android_curl_archive() {
+    local library_name=$1
+}

@@ -1,7 +1,5 @@
 #!/bin/sh
 
-source $(cd -P "$(dirname "$0")" && pwd)/android-common.sh
-
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
 echo "# Author:                  yu.zuo                                             #" >/dev/null
@@ -10,7 +8,7 @@ echo "# Script version:          1.0.0                                          
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Brief introduction:                                                         #" >/dev/null
-echo "# Build iOS and Android C&&C++ common library.                                #" >/dev/null
+echo "# Build android openssl shell script.                                         #" >/dev/null
 echo "#                                                                             #" >/dev/null
 echo "# Prerequisites:                                                              #" >/dev/null
 echo "# GNU bash (version 3.2.57 test success on macOS)                             #" >/dev/null
@@ -19,105 +17,98 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
-set -u
+# set -x
 
-TOOLS_ROOT=$(pwd)
+openssl_zip_file=""
+openssl_zip_file_no_suffix=""
+openssl_zip_file_path=""
+openssl_zip_file_no_suffix_path=""
+openssl_input_dir=""
+openssl_output_dir=""
 
-SOURCE="$0"
-while [ -h "$SOURCE" ]; do
-    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-    SOURCE="$(readlink "$SOURCE")"
-    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-pwd_path="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+function android_openssl_printf_variable() {
+    log_var_print "openssl_input_dir =                $openssl_input_dir"
+    log_var_print "openssl_output_dir =               $openssl_output_dir"
+    log_var_print "openssl_zip_file =                 $openssl_zip_file"
+    log_var_print "openssl_zip_file_no_suffix =       $openssl_zip_file_no_suffix"
+    log_var_print "openssl_zip_file_path =            $openssl_zip_file_path"
+    log_var_print "openssl_zip_file_no_suffix_path =  $openssl_zip_file_no_suffix_path"
+}
 
-echo pwd_path=${pwd_path}
-echo TOOLS_ROOT=${TOOLS_ROOT}
+function android_openssl_pre_tool_check() {
 
-# openssl-1.1.0f has a configure bug
-# openssl-1.1.1d has fix configure bug
-LIB_VERSION="OpenSSL_1_1_1d"
-LIB_NAME="openssl-1.1.1d"
-LIB_DEST_DIR="${pwd_path}/../output/android/openssl-universal"
+    openssl_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
+    openssl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_LIBRARY_NAME}"
 
-echo "https://www.openssl.org/source/${LIB_NAME}.tar.gz"
+    openssl_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
+    openssl_zip_file_no_suffix=${openssl_zip_file%.tar.gz}
+    openssl_zip_file_path="${openssl_input_dir}/${openssl_zip_file}"
+    openssl_zip_file_no_suffix_path="${openssl_input_dir}/${openssl_zip_file_no_suffix}"
 
-# https://github.com/openssl/openssl/archive/OpenSSL_1_1_1d.tar.gz
-# https://github.com/openssl/openssl/archive/OpenSSL_1_1_1f.tar.gz
-rm -rf "${LIB_DEST_DIR}" "${LIB_NAME}"
-[ -f "${LIB_NAME}.tar.gz" ] || curl https://www.openssl.org/source/${LIB_NAME}.tar.gz >${LIB_NAME}.tar.gz
+    mkdir -p "${openssl_input_dir}"
+    mkdir -p "${openssl_output_dir}"
 
-android_set_toolchain_bin
+    android_openssl_printf_variable
 
-function configure_make() {
+}
 
-    ARCH=$1
-    ABI=$2
-    ABI_TRIPLE=$3
+function android_openssl_pre_download_zip() {
+    local library_id=$1
+    util_download_file "$COMMON_DOWNLOAD_ADRESS" "$openssl_zip_file_path"
+}
 
-    log_info_print "configure $ABI start..."
+function android_openssl_build_unzip() {
+    local library_id=$1
+    util_unzip "$openssl_zip_file_path" "${openssl_input_dir}" "$openssl_zip_file_no_suffix"
+}
 
-    if [ -d "${LIB_NAME}" ]; then
-        rm -fr "${LIB_NAME}"
-    fi
-    tar xfz "${LIB_NAME}.tar.gz"
-    pushd .
-    cd "${LIB_NAME}"
-
-    PREFIX_DIR="${pwd_path}/../output/android/openssl-${ABI}"
-    if [ -d "${PREFIX_DIR}" ]; then
-        rm -fr "${PREFIX_DIR}"
-    fi
-    mkdir -p "${PREFIX_DIR}"
-
-    OUTPUT_ROOT=${TOOLS_ROOT}/../output/android/openssl-${ABI}
-    mkdir -p ${OUTPUT_ROOT}/log
-
-    android_set_toolchain "openssl" "${ARCH}" "${ANDROID_API}"
-    android_set_cpu_feature "openssl" "${ARCH}" "${ANDROID_API}"
+function android_openssl_build_config_make() {
+    local library_id=$1
+    local library_arch=$2
 
     export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
-    echo ANDROID_NDK_HOME=${ANDROID_NDK_HOME}
 
-    android_printf_global_params "$ARCH" "$ABI" "$ABI_TRIPLE" "$PREFIX_DIR" "$OUTPUT_ROOT"
+    local library_arch_path="${openssl_output_dir}/${library_arch}"
+    rm -rf "$library_arch_path"
+    mkdir -p "${library_arch_path}/log"
 
-    if [[ "${ARCH}" == "x86_64" ]]; then
+    android_set_toolchain "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
+    android_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
 
-        ./Configure android-x86_64 --prefix="${PREFIX_DIR}"
+    android_printf_arch_variable
 
-    elif [[ "${ARCH}" == "x86" ]]; then
+    pushd .
+    cd "$openssl_zip_file_no_suffix_path"
 
-        ./Configure android-x86 --prefix="${PREFIX_DIR}"
+    if [[ "${library_arch}" == "x86-64" ]]; then
 
-    elif [[ "${ARCH}" == "arm" ]]; then
+        ./Configure android-x86_64 --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-        ./Configure android-arm --prefix="${PREFIX_DIR}"
+    elif [[ "${library_arch}" == "x86" ]]; then
 
-    elif [[ "${ARCH}" == "arm64" ]]; then
+        ./Configure android-x86 --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
-        ./Configure android-arm64 --prefix="${PREFIX_DIR}"
+    elif [[ "${library_arch}" == "armeabi-v7a" ]]; then
+
+        ./Configure android-arm --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+    elif [[ "${library_arch}" == "arm64-v8a" ]]; then
+
+        ./Configure android-arm64 --prefix="${library_arch_path}" >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     else
-        log_error_print "not support" && exit 1
+        common_die "not support $library_arch"
     fi
 
-    log_info_print "make $ABI start..."
-
-    make clean >"${OUTPUT_ROOT}/log/${ABI}.log"
-    if make -j$(util_get_cpu_count) >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1; then
-        make install_sw >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
-        make install_ssldirs >>"${OUTPUT_ROOT}/log/${ABI}.log" 2>&1
+    make clean >>"${library_arch_path}/log/output.log"
+    if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
+        make install_sw >>"${library_arch_path}/log/output.log" 2>&1
+        make install_ssldirs >>"${library_arch_path}/log/output.log" 2>&1
     fi
 
     popd
 }
 
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} start..."
-
-for ((i = 0; i < ${#ARCHS[@]}; i++)); do
-    if [[ $# -eq 0 || "$1" == "${ARCHS[i]}" ]]; then
-        configure_make "${ARCHS[i]}" "${ABIS[i]}" "${ABI_TRIPLES[i]}"
-    fi
-done
-
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} end..."
+function android_openssl_archive() {
+    local library_name=$1
+}

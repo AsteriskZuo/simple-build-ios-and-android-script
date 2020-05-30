@@ -208,22 +208,23 @@ function android_pre_download_zip() {
 }
 
 function android_build_unzip() {
-  log_info_print "android_build_unzip $1 start..."
+  log_info_print "android_build_unzip $1 $2 start..."
   local library_id=$1
+  local library_arch=$2
   local build_unzip="android_${COMMON_LIBRARY_NAME}_build_unzip"
   common_build_unzip "$library_id"
   eval ${build_unzip} "$library_id"
-  log_info_print "android_build_unzip $1 end..."
+  log_info_print "android_build_unzip $1 $2 end..."
 }
 
 function android_build_config_make() {
-  log_info_print "common_build_config_make $1 start..."
+  log_info_print "android_build_config_make $1 $2 start..."
   local library_id=$1
   local library_arch=$2
   local build_config_make="android_${COMMON_LIBRARY_NAME}_build_config_make"
   common_build_config_make "$library_id" "$library_arch"
   eval ${build_config_make} "$library_id" "$library_arch"
-  log_info_print "common_build_config_make $1 end..."
+  log_info_print "android_build_config_make $1 $2 end..."
 }
 
 function android_archive() {

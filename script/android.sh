@@ -66,7 +66,7 @@ android_set_toolchain_bin
 android_pre_tool_check "${COMMON_LIBRARY_ID}"
 android_pre_download_zip "${COMMON_LIBRARY_ID}"
 for ((i = 0; i < ${#ANDROID_ARCHS[@]}; i++)); do
-    android_build_unzip "${COMMON_LIBRARY_ID}"
+    android_build_unzip "${COMMON_LIBRARY_ID}" "${ANDROID_ARCHS[i]}"
     android_build_config_make "${COMMON_LIBRARY_ID}" "${ANDROID_ARCHS[i]}"
 done
 android_archive "${COMMON_LIBRARY_ID}"
