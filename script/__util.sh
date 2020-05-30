@@ -70,13 +70,13 @@ function util_dir_is_empty() {
 }
 
 function util_append() {
-    var=$1
+    local var=$1
     shift
     eval "$var=\"\$$var$*\""
 }
 
 function util_prepend() {
-    var=$1
+    local var=$1
     shift
     eval "$var=\"$*\$$var\""
 }
@@ -149,7 +149,7 @@ function util_c_escape() {
 }
 
 function util_sh_quote() {
-    v=$(echo "$1" | sed "s/'/'\\\\''/g")
+    local v=$(echo "$1" | sed "s/'/'\\\\''/g")
     test "x$v" = "x${v#*[!A-Za-z0-9_/.+-]}" || v="'$v'"
     echo "$v"
 }
@@ -159,7 +159,7 @@ function util_cleanws() {
 }
 
 function util_filter() {
-    pat=$1
+    local pat=$1
     shift
     for v; do
         eval "case '$v' in $pat) printf '%s ' '$v' ;; esac"
@@ -167,7 +167,7 @@ function util_filter() {
 }
 
 function util_filter_out() {
-    pat=$1
+    local pat=$1
     shift
     for v; do
         eval "case '$v' in $pat) ;; *) printf '%s ' '$v' ;; esac"
