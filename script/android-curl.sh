@@ -41,17 +41,17 @@ function android_curl_printf_variable() {
 
 function android_curl_pre_tool_check() {
 
-    openssl_output_dir="${COMMON_OUTPUT_DIR}/$(common_get_library_name_from_id 1)"
+    openssl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/$(common_get_library_name_from_id 1)"
     if [ ! -d "${openssl_output_dir}" ]; then
         common_die "Please build the openssl library first!"
     fi
-    nghttp2_output_dir="${COMMON_OUTPUT_DIR}/$(common_get_library_name_from_id 2)"
+    nghttp2_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/$(common_get_library_name_from_id 2)"
     if [ ! -d "${nghttp2_output_dir}" ]; then
         common_die "Please build the nghttp2 library first!"
     fi
 
     curl_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
-    curl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_LIBRARY_NAME}"
+    curl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/${COMMON_LIBRARY_NAME}"
 
     curl_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
     curl_zip_file_no_suffix=${curl_zip_file%.tar.gz}

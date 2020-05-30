@@ -38,7 +38,7 @@ function android_nghttp2_printf_variable() {
 function android_nghttp2_pre_tool_check() {
 
   nghttp2_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
-  nghttp2_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_LIBRARY_NAME}"
+  nghttp2_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/${COMMON_LIBRARY_NAME}"
 
   nghttp2_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
   nghttp2_zip_file_no_suffix=${nghttp2_zip_file%.tar.gz}

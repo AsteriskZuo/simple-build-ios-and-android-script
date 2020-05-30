@@ -38,7 +38,7 @@ function android_openssl_printf_variable() {
 function android_openssl_pre_tool_check() {
 
     openssl_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
-    openssl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_LIBRARY_NAME}"
+    openssl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/${COMMON_LIBRARY_NAME}"
 
     openssl_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
     openssl_zip_file_no_suffix=${openssl_zip_file%.tar.gz}

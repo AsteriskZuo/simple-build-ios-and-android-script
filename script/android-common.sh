@@ -23,7 +23,7 @@ echo "##########################################################################
 echo "#### Global Variable Partition                                            #####" >/dev/null
 echo "###############################################################################" >/dev/null
 
-export COMMON_PLATFORM_TYPE="Android"
+export COMMON_PLATFORM_TYPE="android"
 export ANDROID_ARCHS=("armeabi-v7a" "arm64-v8a" "x86" "x86-64")
 export ANDROID_TRIPLES=("arm-linux-androideabi" "aarch64-linux-android" "i686-linux-android" "x86_64-linux-android")
 export ANDROID_API=23
