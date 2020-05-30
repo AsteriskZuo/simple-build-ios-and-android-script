@@ -17,6 +17,30 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
+function util_init_log() {
+    if test -t 1 && which tput >/dev/null 2>&1; then
+        ncolors=$(tput colors)
+        if test -n "$ncolors" && test $ncolors -ge 8; then
+            bold_color=$(tput bold)
+            warn_color=$(tput setaf 3)
+            error_color=$(tput setaf 1)
+            reset_color=$(tput sgr0)
+        fi
+        # 72 used instead of 80 since that's the default of pr
+        ncols=$(tput cols)
+    fi
+    : ${ncols:=72}
+}
+
+function util_die() {
+    echo "$error_color$bold_color$@$reset_color" && exit 1
+}
+
+function util_debug() {
+    PS4='+line:${LINENO} '
+    set -x
+}
+
 function util_get_cpu_count() {
     if [ "$(uname)" == "Darwin" ]; then
         echo $(sysctl -n hw.physicalcpu)
@@ -165,7 +189,7 @@ function util_download_file() {
     if [ ! -r ${zip} ]; then
         curl -SL "$url" -o "$zip" || ret="no"
         if [ "no" = $ret ]; then
-            rm -rf "$zip" && exit 1
+            rm -rf "$zip" && util_die "download zip ${zip} fail."
         fi
     fi
 }
@@ -180,10 +204,12 @@ function util_unzip() {
     local ret="yes"
     tar -x -C "$dir" -f "$zip" || ret="no"
     if [ "no" = ret ]; then
-        rm -rf "$zip" && exit 1
+        rm -rf "$zip" && util_die "unzip ${zip} fail."
     fi
 }
 
 function util_load_script() {
-    source $1 || exit 1
+    source $1 || util_die "load script $1 fail."
 }
+
+util_init_log

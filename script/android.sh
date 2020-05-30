@@ -20,12 +20,13 @@ log_head_print "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_androi
 log_head_print "###############################################################################"
 
 set -u
+# util_debug
 
 opt_count=$#
 opt=$*
 
 if [ "Darwin" != $(uname -s) ]; then
-    log_error_print "This is not MacOS."
+    common_die "This is not MacOS."
 fi
 
 if [ ! $opt ]; then
@@ -40,12 +41,12 @@ for opt; do
         ;;
     --name=*)
         if util_is_in $optval $COMMON_LIBRARY_NAME_LIST; then
-            COMMON_LIBRARY_NAME=($optval)
-            COMMON_LIBRARY_ID=$(common_get_library_id_from_name "$COMMON_LIBRARY_NAME")
-            COMMON_LIBRARY_VERSION=$(common_get_library_version_from_id $COMMON_LIBRARY_ID)
-            COMMON_DOWNLOAD_ADRESS=$(common_get_library_url_from_id $COMMON_LIBRARY_ID)
+            export COMMON_LIBRARY_NAME=($optval)
+            export COMMON_LIBRARY_ID="$(common_get_library_id_from_name "$COMMON_LIBRARY_NAME")"
+            export COMMON_LIBRARY_VERSION=$(common_get_library_version_from_id $COMMON_LIBRARY_ID)
+            export COMMON_DOWNLOAD_ADRESS=$(common_get_library_url_from_id $COMMON_LIBRARY_ID)
         else
-            log_error_print 'name is not in list. please refer ${COMMON_LIBRARY_NAME_LIST}' && exit 1
+            common_die 'name is not in list. please refer ${COMMON_LIBRARY_NAME_LIST}'
         fi
         ;;
     *)
@@ -59,14 +60,15 @@ android_printf_variable
 
 util_load_script "$(android_get_shell_script_path ${COMMON_LIBRARY_ID})"
 
-log_info_print "build ${COMMON_LIBRARY_ID} ${COMMON_LIBRARY_NAME} ${COMMON_LIBRARY_VERSION} start..."
+log_warning_print "build ${COMMON_LIBRARY_ID} ${COMMON_LIBRARY_NAME} ${COMMON_LIBRARY_VERSION} start..."
 
+android_set_toolchain_bin
 android_pre_tool_check "${COMMON_LIBRARY_ID}"
 android_pre_download_zip "${COMMON_LIBRARY_ID}"
 for ((i = 0; i < ${#ANDROID_ARCHS[@]}; i++)); do
-    android_build_config "${COMMON_LIBRARY_ID}" "${ANDROID_ARCHS[i]}"
-    android_buid_make "${COMMON_LIBRARY_ID}" "${ANDROID_ARCHS[i]}"
+    android_build_unzip "${COMMON_LIBRARY_ID}"
+    android_build_config_make "${COMMON_LIBRARY_ID}" "${ANDROID_ARCHS[i]}"
 done
 android_archive "${COMMON_LIBRARY_ID}"
 
-log_info_print "build ${COMMON_LIBRARY_ID} ${COMMON_LIBRARY_NAME} ${COMMON_LIBRARY_VERSION} end..."
+log_warning_print "build ${COMMON_LIBRARY_ID} ${COMMON_LIBRARY_NAME} ${COMMON_LIBRARY_VERSION} end..."

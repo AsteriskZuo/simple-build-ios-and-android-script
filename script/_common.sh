@@ -123,6 +123,10 @@ function common_get_library_url_from_id() {
     echo "$(util_get_list_item $1 $COMMON_LIBRARY_URL_LIST)"
 }
 
+function common_die() {
+    log_error_print "$1" && exit 1
+}
+
 echo "###############################################################################" >/dev/null
 echo "#### Flow Function Partition                                              #####" >/dev/null
 echo "###############################################################################" >/dev/null
@@ -137,15 +141,9 @@ function common_pre_download_zip() {
 
 function common_build_unzip() {
     local library_id=$1
-    local arch=$2
 }
 
-function common_build_config() {
-    local library_id=$1
-    local arch=$2
-}
-
-function common_buid_make() {
+function common_build_config_make() {
     local library_id=$1
     local arch=$2
 }

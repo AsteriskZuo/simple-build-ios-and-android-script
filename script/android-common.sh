@@ -24,12 +24,12 @@ echo "#### Global Variable Partition                                            
 echo "###############################################################################" >/dev/null
 
 export COMMON_PLATFORM_TYPE="Android"
-export ANDROID_ARCHS=("armeabi-v7a" "arm64-v8a" "x86" "x86_64")
+export ANDROID_ARCHS=("armeabi-v7a" "arm64-v8a" "x86" "x86-64")
 export ANDROID_TRIPLES=("arm-linux-androideabi" "aarch64-linux-android" "i686-linux-android" "x86_64-linux-android")
 export ANDROID_API=23
 
 # for test
-# ANDROID_ARCHS=("x86_64")
+# ANDROID_ARCHS=("x86-64")
 # ANDROID_TRIPLES=("x86_64-linux-android")
 # ANDROID_API=23
 
@@ -55,46 +55,10 @@ function android_get_toolchain() {
   echo "${HOST_OS}-${HOST_ARCH}"
 }
 
-function android_get_arch() {
-  local common_arch=$1
-  case ${common_arch} in
-  arm)
-    echo "arm-v7a"
-    ;;
-  arm64)
-    echo "arm64-v8a"
-    ;;
-  x86)
-    echo "x86"
-    ;;
-  x86_64)
-    echo "x86-64"
-    ;;
-  esac
-}
-
-function android_get_target_build() {
+function android_get_build_host() {
   local arch=$1
   case ${arch} in
-  arm-v7a)
-    echo "arm"
-    ;;
-  arm64-v8a)
-    echo "arm64"
-    ;;
-  x86)
-    echo "x86"
-    ;;
-  x86-64)
-    echo "x86_64"
-    ;;
-  esac
-}
-
-function android_get_build_host_internal() {
-  local arch=$1
-  case ${arch} in
-  arm-v7a | arm-v7a-neon)
+  armeabi-v7a)
     echo "arm-linux-androideabi"
     ;;
   arm64-v8a)
@@ -109,16 +73,11 @@ function android_get_build_host_internal() {
   esac
 }
 
-function android_get_build_host() {
-  local arch=$(android_get_arch $1)
-  android_get_build_host_internal $arch
-}
-
 function android_get_clang_target_host() {
   local arch=$1
   local api=$2
   case ${arch} in
-  arm-v7a | arm-v7a-neon)
+  armeabi-v7a)
     echo "armv7a-linux-androideabi${api}"
     ;;
   arm64-v8a)
@@ -140,9 +99,9 @@ function android_set_toolchain_bin() {
 
 function android_set_toolchain() {
   local name=$1
-  local arch=$(android_get_arch $2)
+  local arch=$2
   local api=$3
-  local build_host=$(android_get_build_host_internal "$arch")
+  local build_host=$(android_get_build_host "$arch")
   local clang_target_host=$(android_get_clang_target_host "$arch" "$api")
 
   export AR=${build_host}-ar
@@ -162,16 +121,16 @@ function android_get_common_linked_libraries() {
   local api=$1
   local arch=$2
   local toolchain=$(android_get_toolchain)
-  local build_host=$(android_get_build_host_internal "$arch")
+  local build_host=$(android_get_build_host "$arch")
   echo "-L${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${toolchain}/${build_host}/lib -L${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${toolchain}/sysroot/usr/lib/${build_host}/${api} -L${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/${toolchain}/lib"
 }
 
 function android_set_cpu_feature() {
   local name=$1
-  local arch=$(android_get_arch $2)
+  local arch=$2
   local api=$3
   case ${arch} in
-  arm-v7a | arm-v7a-neon)
+  armeabi-v7a)
     export CFLAGS="-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -Wno-unused-function -fno-integrated-as -fstrict-aliasing -fPIC -DANDROID -D__ANDROID_API__=${api} -Os -ffunction-sections -fdata-sections $(android_get_common_includes)"
     export CXXFLAGS="-std=c++14 -Os -ffunction-sections -fdata-sections"
     export LDFLAGS="-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -Wl,--fix-cortex-a8 -Wl,--gc-sections -Os -ffunction-sections -fdata-sections $(android_get_common_linked_libraries ${api} ${arch})"
@@ -199,9 +158,9 @@ function android_set_cpu_feature() {
 }
 
 function android_printf_variable() {
-  log_var_print "ANDROID_ARCHS =  ${ANDROID_ARCHS[@]}"
-  log_var_print "ANDROID_TRIPLES = ${ANDROID_TRIPLES[@]}"
-  log_var_print "ANDROID_API =    $ANDROID_API"
+  log_var_print "ANDROID_ARCHS =    ${ANDROID_ARCHS[@]}"
+  log_var_print "ANDROID_TRIPLES =  ${ANDROID_TRIPLES[@]}"
+  log_var_print "ANDROID_API =      $ANDROID_API"
 }
 
 function android_printf_arch_variable() {
@@ -223,7 +182,7 @@ function android_help() {
 }
 
 function android_get_shell_script_path() {
-  echo "${COMMON_SCRIPT_DIR}/$(util_toupper $COMMON_PLATFORM_TYPE)-${COMMON_LIBRARY_NAME}.sh"
+  echo "${COMMON_SCRIPT_DIR}/$(util_tolower $COMMON_PLATFORM_TYPE)-${COMMON_LIBRARY_NAME}.sh"
 }
 
 echo "###############################################################################" >/dev/null
@@ -231,43 +190,47 @@ echo "#### Flow Function Partition                                              
 echo "###############################################################################" >/dev/null
 
 function android_pre_tool_check() {
+  log_info_print "android_pre_tool_check $1 start..."
   local library_id=$1
   local pre_tool_check="android_${COMMON_LIBRARY_NAME}_pre_tool_check"
-  common_pre_tool_check $library_id
-  eval ${pre_tool_check} $library_id
+  common_pre_tool_check "$library_id"
+  eval ${pre_tool_check} "$library_id"
+  log_info_print "android_pre_tool_check $1 end..."
 }
 
 function android_pre_download_zip() {
+  log_info_print "android_pre_download_zip $1 start..."
   local library_id=$1
   local pre_download_zip="android_${COMMON_LIBRARY_NAME}_pre_download_zip"
-  common_pre_download_zip $library_id
-  eval ${pre_download_zip} $library_id
+  common_pre_download_zip "$library_id"
+  eval ${pre_download_zip} "$library_id"
+  log_info_print "android_pre_download_zip $1 end..."
 }
 
 function android_build_unzip() {
+  log_info_print "android_build_unzip $1 start..."
   local library_id=$1
   local build_unzip="android_${COMMON_LIBRARY_NAME}_build_unzip"
-  common_build_unzip $library_id
-  eval ${build_unzip} $library_id
+  common_build_unzip "$library_id"
+  eval ${build_unzip} "$library_id"
+  log_info_print "android_build_unzip $1 end..."
 }
 
-function android_build_config() {
+function android_build_config_make() {
+  log_info_print "common_build_config_make $1 start..."
   local library_id=$1
-  local build_config="android_${COMMON_LIBRARY_NAME}_build_config"
-  common_build_config $library_id
-  eval ${build_config} $library_id
-}
-
-function android_buid_make() {
-  local library_id=$1
-  local buid_make="android_${COMMON_LIBRARY_NAME}_buid_make"
-  common_buid_make $library_id
-  eval ${buid_make} $library_id
+  local library_arch=$2
+  local build_config_make="android_${COMMON_LIBRARY_NAME}_build_config_make"
+  common_build_config_make "$library_id" "$library_arch"
+  eval ${build_config_make} "$library_id" "$library_arch"
+  log_info_print "common_build_config_make $1 end..."
 }
 
 function android_archive() {
+  log_info_print "android_archive $1 start..."
   local library_id=$1
   local archive="android_${COMMON_LIBRARY_NAME}_archive"
-  common_archive $library_id
-  eval ${archive} $library_id
+  common_archive "$library_id"
+  eval ${archive} "$library_id"
+  log_info_print "android_archive $1 end..."
 }

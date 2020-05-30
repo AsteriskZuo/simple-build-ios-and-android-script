@@ -72,8 +72,52 @@ echo "##########################################################################
 # }
 # var="func_name"
 # eval $var "hahah"
-COMMON_DOWNLOAD_ADRESS="https://github.com/protocolbuffers/protobuf/releases/download/v3.12.2/protobuf-all-3.12.2.tar.gz"
-url_file_name=${COMMON_DOWNLOAD_ADRESS##*/}
-unzip_output_dir=${url_file_name%.tar.gz}
-echo "url_file_name=$url_file_name"
-echo "unzip_output_dir=$unzip_output_dir"
+# COMMON_DOWNLOAD_ADRESS="https://github.com/protocolbuffers/protobuf/releases/download/v3.12.2/protobuf-all-3.12.2.tar.gz"
+# url_file_name=${COMMON_DOWNLOAD_ADRESS##*/}
+# unzip_output_dir=${url_file_name%.tar.gz}
+# echo "url_file_name=$url_file_name"
+# echo "unzip_output_dir=$unzip_output_dir"
+
+# 测试逻辑运算符
+# COMPONENT_LIST="
+# 1wer
+# 2wer
+# 3sdfsdf
+# 4rwer
+# "
+# ITEM="1234"
+# function die() {
+#     echo "error"
+#     exit 1
+# }
+# util_is_in "$ITEM" "$COMPONENT_LIST" || common_die "error1"
+# echo "lalala"
+# util_is_in "$ITEM" "$COMPONENT_LIST" || common_die 'sdfsdf ${COMPONENT_LIST}'
+# echo "lskdjfksd"
+
+# 测试 log_info_print
+# log_info_print "123"
+# var="1234"
+# log_info_print "12 ${var}"
+# set -u
+# function test_param() {
+#     local ssss=$1
+#     echo "sdfe" >/dev/null
+# }
+# test_param "sdf"
+
+# PS4='Line ${LINENO}: '
+# set -x
+# function sdfsdff() {
+#     echo "haha"
+# }
+# echo "sssdf"
+
+# 测试调试行数
+# PS4='[line:${LINENO}]'
+# set -x
+# echo sdfsd
+# function test () {
+#     echo "hjss"
+# }
+# test

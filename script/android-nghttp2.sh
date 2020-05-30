@@ -1,7 +1,5 @@
 #!/bin/sh
 
-source $(cd -P "$(dirname "$0")" && pwd)/android-common.sh
-
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
 echo "# Author:                  yu.zuo                                             #" >/dev/null
@@ -19,154 +17,98 @@ echo "# Reference:                                                              
 echo "# Url: https://github.com/AsteriskZuo/openssl_for_ios_and_android             #" >/dev/null
 echo "###############################################################################" >/dev/null
 
+# set -x
+
+nghttp2_zip_file=""
+nghttp2_zip_file_no_suffix=""
+nghttp2_zip_file_path=""
+nghttp2_zip_file_no_suffix_path=""
+nghttp2_input_dir=""
+nghttp2_output_dir=""
+
+function android_nghttp2_printf_variable() {
+  log_var_print "nghttp2_input_dir =                $nghttp2_input_dir"
+  log_var_print "nghttp2_output_dir =               $nghttp2_output_dir"
+  log_var_print "nghttp2_zip_file =                 $nghttp2_zip_file"
+  log_var_print "nghttp2_zip_file_no_suffix =       $nghttp2_zip_file_no_suffix"
+  log_var_print "nghttp2_zip_file_path =            $nghttp2_zip_file_path"
+  log_var_print "nghttp2_zip_file_no_suffix_path =  $nghttp2_zip_file_no_suffix_path"
+}
+
 function android_nghttp2_pre_tool_check() {
-  echo "$COMMON_LIBRARY_NAME"
+
+  nghttp2_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
+  nghttp2_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_LIBRARY_NAME}"
+
+  nghttp2_zip_file="${COMMON_DOWNLOAD_ADRESS##*/}"
+  nghttp2_zip_file_no_suffix=${nghttp2_zip_file%.tar.gz}
+  nghttp2_zip_file_path="${nghttp2_input_dir}/${nghttp2_zip_file}"
+  nghttp2_zip_file_no_suffix_path="${nghttp2_input_dir}/${nghttp2_zip_file_no_suffix}"
+
+  mkdir -p "${nghttp2_input_dir}"
+  mkdir -p "${nghttp2_output_dir}"
+
+  android_nghttp2_printf_variable
+
 }
 
 function android_nghttp2_pre_download_zip() {
   local library_id=$1
-  local url_file_name=${COMMON_DOWNLOAD_ADRESS##*/}
-  local saved_zip_path="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}/${url_file_name}"
-  if [ ! -r ${saved_zip_path} ]; then
-    curl -SL "$COMMON_DOWNLOAD_ADRESS" -o "$saved_zip_path" || ret="no"
-    if [ "no" = $ret ]; then
-      rm -rf "$saved_zip_path" && exit 1
-    fi
-  fi
+  util_download_file "$COMMON_DOWNLOAD_ADRESS" "$nghttp2_zip_file_path"
 }
 
 function android_nghttp2_build_unzip() {
   local library_id=$1
-  local url_file_name=${COMMON_DOWNLOAD_ADRESS##*/}
-  local saved_zip_path="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}/${url_file_name}"
-  local unzip_output_dir=${url_file_name%.tar.gz}
-  local unzip_src=$4
-  if [ -d "${unzip_output_dir}" ]; then
-    rm -rf "${unzip_output_dir}"
-  fi
-  local ret="yes"
-  tar -x -C "$unzip_output_dir" -f "$saved_zip_path" || ret="no"
-  if [ "no" = ret ]; then
-    rm -rf "$saved_zip_path" && exit 1
-  fi
+  util_unzip "$nghttp2_zip_file_path" "${nghttp2_input_dir}" "$nghttp2_zip_file_no_suffix"
 }
 
-function android_nghttp2_build_config() {
-  local library_name=$1
-  local arch=$2
-  common_build_config $library_name $arch
-}
+function android_nghttp2_build_config_make() {
+  local library_id=$1
+  local library_arch=$2
 
-function android_nghttp2_buid_make() {
-  local library_name=$1
-  common_buid_make $library_name
+  export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
+
+  local library_arch_path="${nghttp2_output_dir}/${library_arch}"
+  rm -rf "$library_arch_path"
+  mkdir -p "${library_arch_path}/log"
+
+  android_set_toolchain "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
+  android_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
+
+  android_printf_arch_variable
+
+  pushd .
+  cd "$nghttp2_zip_file_no_suffix_path"
+
+  if [[ "${library_arch}" == "x86-64" ]]; then
+
+    ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+  elif [[ "${library_arch}" == "x86" ]]; then
+
+    ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+  elif [[ "${library_arch}" == "armeabi-v7a" ]]; then
+
+    ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+  elif [[ "${library_arch}" == "arm64-v8a" ]]; then
+
+    # --disable-lib-only need xml2 supc++ stdc++14
+    ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-app --disable-threads --enable-lib-only >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+
+  else
+    common_die "not support $library_arch"
+  fi
+
+  make clean >>"${library_arch_path}/log/output.log"
+  if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
+    make install >>"${library_arch_path}/log/output.log" 2>&1
+  fi
+
+  popd
 }
 
 function android_nghttp2_archive() {
   local library_name=$1
-  common_archive $library_name
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-set -u
-
-echo "nghttp2 load success"
-
-export LIB_VERSION="v1.40.0"
-export LIB_NAME="nghttp2-1.40.0"
-export DOWNLOAD_ADRESS="https://github.com/nghttp2/nghttp2/releases/download/${LIB_VERSION}/${LIB_NAME}.tar.gz"
-
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} build start..."
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} download start..."
-util_download_file "$DOWNLOAD_ADRESS" "${INPUT_DIR}/${LIB_NAME}.tar.gz"
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} download end..."
-
-android_set_toolchain_bin
-
-function configure_make() {
-
-    ARCH=$1
-    ABI=$2
-    ABI_TRIPLE=$3
-
-    log_info_print "${PLATFORM_TYPE} ${LIB_NAME} ${ABI} configure start..."
-
-    util_unzip "${INPUT_DIR}/${LIB_NAME}.tar.gz" "$INPUT_DIR" "$LIB_NAME"
-
-    pushd .
-    cd "${INPUT_DIR}/${LIB_NAME}" || exit 1
-
-    PREFIX_DIR="${OUTPUT_DIR}/${PLATFORM_TYPE}-${LIB_NAME}-${ABI}"
-    util_remove_dir "$PREFIX_DIR"
-    util_create_dir "${PREFIX_DIR}/log"
-
-    android_set_toolchain "nghttp2" "${ARCH}" "${ANDROID_API}"
-    android_set_cpu_feature "nghttp2" "${ARCH}" "${ANDROID_API}"
-
-    export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
-    echo ANDROID_NDK_HOME=${ANDROID_NDK_HOME}
-
-    android_printf_global_params "$ARCH" "$ABI" "$ABI_TRIPLE" "${INPUT_DIR}/${LIB_NAME}" "$PREFIX_DIR"
-
-    if [[ "${ARCH}" == "x86_64" ]]; then
-
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/output.log" 2>&1
-
-    elif [[ "${ARCH}" == "x86" ]]; then
-
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/output.log" 2>&1
-
-    elif [[ "${ARCH}" == "arm" ]]; then
-
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/output.log" 2>&1
-
-    elif [[ "${ARCH}" == "arm64" ]]; then
-
-        # --disable-lib-only need xml2 supc++ stdc++14
-        ./configure --host=$(android_get_build_host "${ARCH}") --prefix="${PREFIX_DIR}" --disable-app --disable-threads --enable-lib-only >"${PREFIX_DIR}/log/output.log" 2>&1
-
-    else
-        log_error_print "not support" && exit 1
-    fi
-
-    log_info_print "${PLATFORM_TYPE} ${LIB_NAME} ${ABI} configure end..."
-    log_info_print "${PLATFORM_TYPE} ${LIB_NAME} ${ABI} make start..."
-
-    make clean >>"${PREFIX_DIR}/log/output.log"
-    if make -j$(util_get_cpu_count) >>"${PREFIX_DIR}/log/output.log" 2>&1; then
-        make install >>"${PREFIX_DIR}/log/output.log" 2>&1
-    fi
-
-    log_info_print "${PLATFORM_TYPE} ${LIB_NAME} ${ABI} make end..."
-
-    popd
-}
-
-for ((i = 0; i < ${#ARCHS[@]}; i++)); do
-    if [[ $# -eq 0 || "$1" == "${ARCHS[i]}" ]]; then
-        configure_make "${ARCHS[i]}" "${ABIS[i]}" "${ABI_TRIPLES[i]}"
-    fi
-done
-
-log_info_print "${PLATFORM_TYPE} ${LIB_NAME} build end..."
