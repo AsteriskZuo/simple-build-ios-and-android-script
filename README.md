@@ -1,5 +1,5 @@
 # simple-build-ios-and-android-script
-## Documentation
+## 1. Documentation
 ### Introduction
 > #### A common build project for building mobile platform native libraries.
 ### Target users
@@ -51,7 +51,7 @@
 >     - `${COMMON_PLATFORM_TYPE}_${COMMON_LIBRARY_NAME}_archive`: (must)
 > * Contribution notes:
 >   + asteriskzuo: Create the project and complete the main frame design.
-## Architecture design
+## 2. Architecture design
 ### Programming language
 > #### bash shell script
 ### Build platform:
@@ -102,11 +102,11 @@
 >     - ios-curl.sh:
 >     - android-curl.sh:
 >     - More ...
-## Problems to be solved
+## 3. Problems to be solved
 ### Only current list item builds are supported.
 ### Project-made versions can be built, but may not be built properly for lower versions.
 ### Building the dependencies of the target project requires manual construction.
-## Reference
+## 4. Reference
 > [openssl_for_ios_and_android](https://github.com/AsteriskZuo/openssl_for_ios_and_android)
-## Document
+## 5. Document
 > [simple-build-ios-and-android-script](./document/simple-build-ios-and-android-script.html)
