@@ -4,6 +4,12 @@
 > #### A common build project for building mobile platform native libraries.
 ### Target users
 > #### Mobile platform C&&C++ native library.
+### Build target library list:
+> | id | name | version | dependent libraries | note |
+> | :- | :--- | :------ | :------------------ | :--- |
+> | 1  | openssl | 1.1.1d | no | Configure is perl script |
+> | 2  | nghttp2 | 1.40.0 | no | no |
+> | 3  | curl | 7.68.0 | openssl,nghttp2 | no |
 ### Extended instructions
 > #### Use the entry script to build the target library.  
 > #### ios.sh is the ios platform entry script.  
