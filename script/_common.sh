@@ -71,13 +71,13 @@ export COMMON_LIBRARY_VERSION_LIST="
 1.1.1d
 1.40.0
 7.68.0
-3.12.2
+3.11.4
 "
 export COMMON_LIBRARY_URL_LIST="
 https://www.openssl.org/source/openssl-1.1.1d.tar.gz
 https://github.com/nghttp2/nghttp2/releases/download/v1.40.0/nghttp2-1.40.0.tar.gz
 https://curl.haxx.se/download/curl-7.68.0.tar.gz
-https://github.com/protocolbuffers/protobuf/releases/download/v3.12.2/protobuf-all-3.12.2.tar.gz
+https://github.com/protocolbuffers/protobuf/releases/download/v3.11.4/protobuf-cpp-3.11.4.tar.gz
 "
 
 util_create_dir "$COMMON_INPUT_DIR"

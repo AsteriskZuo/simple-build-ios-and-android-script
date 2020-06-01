@@ -123,8 +123,31 @@ echo "##########################################################################
 # test
 
 # 测试if双条件
-count1=0
-count2=1
-if test $count1 -gt 0 && test $count2 -gt 0 ; then
-    echo "ok"
-fi
+# count1=0
+# count2=1
+# if test $count1 -gt 0 && test $count2 -gt 0 ; then
+#     echo "ok"
+# fi
+
+# 测试是否包含指定字符串
+# var="libprotoc 3.11.4"
+# var=$(protoc --version)
+# util_is_in "3.11.4" "$var" && echo "contain" || echo "not contain"
+# util_is_in "3.11.5" "$var" && echo "contain" || echo "not contain"
+# protobuf_version=$(protoc --version)
+# COMMON_LIBRARY_VERSION=3.6.57
+# util_is_in "$COMMON_LIBRARY_VERSION" "$protobuf_version" || common_die "Protobuf is not installed on the system, see the protobuf installation instructions. (ref: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md)"
+
+# 测试转义
+# util_c_escape "123[\\][\"][\'][\][\"\"]123"
+# function util_remove_substr() {
+#     echo "protobuf-cpp-3.11.4" | sed 's/cpp-//g'
+# }
+# util_remove_substr
+# function util_remove_substr2() {
+#     local sub=$1
+#     shift
+#     local str=$*
+#     echo "$str" | sed "s/$sub//g"
+# }
+# util_remove_substr2 "cpp-" "protobuf-cpp-3.11.4"

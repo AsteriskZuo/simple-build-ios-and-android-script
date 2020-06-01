@@ -180,6 +180,13 @@ function util_cleanws() {
     echo "$@" | sed 's/^ *//;s/[[:space:]][[:space:]]*/ /g;s/ *$//'
 }
 
+function util_remove_substr() {
+    local substr=$1
+    shift
+    local str=$*
+    echo "$str" | sed "s/$substr//g"
+}
+
 function util_filter() {
     local pat=$1
     shift
