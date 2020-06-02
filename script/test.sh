@@ -151,3 +151,38 @@ echo "##########################################################################
 #     echo "$str" | sed "s/$sub//g"
 # }
 # util_remove_substr2 "cpp-" "protobuf-cpp-3.11.4"
+
+# 测试protobuf
+# VAR=7
+# case $VAR in
+#     [456]) echo 1
+#     ;;
+#     2|3) echo 2 or 3
+#     ;;
+#     *) echo default
+#     ;;
+# esac
+# var=$(sw_vers | grep ProductVersion)
+# echo "var=$var"
+# MACOSX_DEPLOYMENT_TARGET="${var#*:}"
+# MACOSX_DEPLOYMENT_TARGET=$(util_get_mac_version)
+# MACOSX_DEPLOYMENT_TARGET="10.15"
+# echo ${MACOSX_DEPLOYMENT_TARGET-10.0}
+# case ${MACOSX_DEPLOYMENT_TARGET-10.0} in
+# 10.[0123])
+# echo 1
+#     # func_append compile_command " $wl-bind_at_load"
+#     # func_append finalize_command " $wl-bind_at_load"
+#     ;;
+# esac
+
+# 测试分割字符串
+# MACOSX_DEPLOYMENT_TARGET="10.15.2"
+# ALL_VERSION=($(echo ${MACOSX_DEPLOYMENT_TARGET} | sed "s/\./ /g"))
+# echo "ALL_VERSION=${ALL_VERSION[@]}"
+# mac_version=$(util_get_mac_version)
+# mac_version_list=($(echo ${mac_version} | sed "s/\./ /g"))
+# if test ${#mac_version_list[@]} -lt 3; then
+#     common_die "get mac version error!"
+# fi
+# echo "mac_version_list=${mac_version_list[@]}"

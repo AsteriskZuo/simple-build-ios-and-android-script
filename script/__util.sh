@@ -71,6 +71,11 @@ function util_get_cpu_count() {
     fi
 }
 
+function util_get_mac_version() {
+    local var=$(sw_vers | grep ProductVersion)
+    echo "${var#*:}"
+}
+
 function util_print_current_datetime() {
     echo $(date +%Y-%m-%d\ %H:%M:%S)
 }

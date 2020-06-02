@@ -60,6 +60,14 @@ function ios_protobuf_printf_variable() {
 
 function ios_protobuf_pre_tool_check() {
 
+    # protobuf-3.11.4 need mac version > 10.3
+    local mac_version=$(util_get_mac_version)
+    local mac_version_list=($(echo ${mac_version} | sed "s/\./ /g"))
+    if test ${#mac_version_list[@]} -lt 3; then
+        common_die "get mac version error!"
+    fi
+    export MACOSX_DEPLOYMENT_TARGET="${mac_version_list[0]}.${mac_version_list[1]}"
+
     local protobuf_version=$(protoc --version)
     util_is_in "$COMMON_LIBRARY_VERSION" "$protobuf_version" || common_die "Protobuf is not installed on the system, see the protobuf installation instructions. (ref: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md)"
 
@@ -114,10 +122,6 @@ function ios_protobuf_build_config_make() {
 
     elif [[ "${library_arch}" == "arm64" ]]; then
 
-    # for test
-    export CFLAGS='-arch arm64 -target aarch64-ios-darwin -march=armv8 -mcpu=generic -Wno-unused-function -fstrict-aliasing  -Wno-ignored-optimization-argument -DIOS -fembed-bitcode -miphoneos-version-min=8.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.2.sdk -I/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS13.2.sdk/usr/include'
-    export CPPFLAGS=${CFLAGS}
-
         ./configure --host=$(ios_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     elif [[ "${library_arch}" == "arm64e" ]]; then
@@ -128,12 +132,17 @@ function ios_protobuf_build_config_make() {
         common_die "not support $library_arch"
     fi
 
-    make clean >>"${library_arch_path}/log/output.log"
-    if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
-        if make check >>"${library_arch_path}/log/output.log" 2>&1; then
-            make install >>"${library_arch_path}/log/output.log" 2>&1
-        fi
-    fi
+    echo "[${COMMON_LIBRARY_NAME}_make_clean]" >>"${library_arch_path}/log/output.log"
+    make clean >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make clean error!"
+
+    echo "[${COMMON_LIBRARY_NAME}_make]" >>"${library_arch_path}/log/output.log"
+    make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make error!"
+
+    # echo "[${COMMON_LIBRARY_NAME}_make_check]" >>"${library_arch_path}/log/output.log"
+    # make check >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make check error!"
+
+    echo "[${COMMON_LIBRARY_NAME}_make_install]" >>"${library_arch_path}/log/output.log"
+    make install >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make install error!"
 
     popd
 }
