@@ -59,6 +59,8 @@ function android_openssl_printf_variable() {
 
 function android_openssl_pre_tool_check() {
 
+    export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
+
     openssl_input_dir="${COMMON_INPUT_DIR}/${COMMON_LIBRARY_NAME}"
     openssl_output_dir="${COMMON_OUTPUT_DIR}/${COMMON_PLATFORM_TYPE}/${COMMON_LIBRARY_NAME}"
 
@@ -87,8 +89,6 @@ function android_openssl_build_unzip() {
 function android_openssl_build_config_make() {
     local library_id=$1
     local library_arch=$2
-
-    export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}
 
     local library_arch_path="${openssl_output_dir}/${library_arch}"
     util_remove_dir "$library_arch_path"
@@ -122,11 +122,18 @@ function android_openssl_build_config_make() {
         common_die "not support $library_arch"
     fi
 
-    make clean >>"${library_arch_path}/log/output.log"
-    if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
-        make install_sw >>"${library_arch_path}/log/output.log" 2>&1
-        make install_ssldirs >>"${library_arch_path}/log/output.log" 2>&1
-    fi
+    echo "[${COMMON_LIBRARY_NAME}_make_clean]" >>"${library_arch_path}/log/output.log"
+    make clean >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make clean error!"
+
+    echo "[${COMMON_LIBRARY_NAME}_make]" >>"${library_arch_path}/log/output.log"
+    make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make error!"
+
+    # echo "[${COMMON_LIBRARY_NAME}_make_check]" >>"${library_arch_path}/log/output.log"
+    # make check >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make check error!"
+
+    echo "[${COMMON_LIBRARY_NAME}_make_install]" >>"${library_arch_path}/log/output.log"
+    make install_sw >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make install error!"
+    make install_ssldirs >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make install error!"
 
     popd
 }

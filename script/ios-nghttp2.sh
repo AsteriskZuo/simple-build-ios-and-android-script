@@ -120,10 +120,17 @@ function ios_nghttp2_build_config_make() {
         common_die "not support $library_arch"
     fi
 
-    make clean >>"${library_arch_path}/log/output.log"
-    if make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1; then
-        make install >>"${library_arch_path}/log/output.log" 2>&1
-    fi
+    echo "[${COMMON_LIBRARY_NAME}_make_clean]" >>"${library_arch_path}/log/output.log"
+    make clean >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make clean error!"
+
+    echo "[${COMMON_LIBRARY_NAME}_make]" >>"${library_arch_path}/log/output.log"
+    make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make error!"
+
+    # echo "[${COMMON_LIBRARY_NAME}_make_check]" >>"${library_arch_path}/log/output.log"
+    # make check >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make check error!"
+
+    echo "[${COMMON_LIBRARY_NAME}_make_install]" >>"${library_arch_path}/log/output.log"
+    make install >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make install error!"
 
     popd
 }
