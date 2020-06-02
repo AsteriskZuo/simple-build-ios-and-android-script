@@ -52,9 +52,9 @@ export IOS_API=8.0
 export IOS_SYSROOT=""
 
 # for test
-IOS_ARCHS=("arm64")
-IOS_TRIPLES=("aarch64-ios-darwin")
-IOS_API=8.0
+# IOS_ARCHS=("arm64")
+# IOS_TRIPLES=("aarch64-ios-darwin")
+# IOS_API=8.0
 
 echo "###############################################################################" >/dev/null
 echo "#### Function Partition                                                   #####" >/dev/null

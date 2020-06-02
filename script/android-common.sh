@@ -51,9 +51,9 @@ export ANDROID_TRIPLES=("arm-linux-androideabi" "aarch64-linux-android" "i686-li
 export ANDROID_API=23
 
 # for test
-ANDROID_ARCHS=("arm64-v8a")
-ANDROID_TRIPLES=("aarch64-linux-android")
-ANDROID_API=23
+# ANDROID_ARCHS=("arm64-v8a")
+# ANDROID_TRIPLES=("aarch64-linux-android")
+# ANDROID_API=23
 
 echo "###############################################################################" >/dev/null
 echo "#### Function Partition                                                   #####" >/dev/null
