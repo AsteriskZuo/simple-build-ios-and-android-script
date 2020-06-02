@@ -112,7 +112,7 @@ function android_protobuf_build_config_make() {
 
     elif [[ "${library_arch}" == "armeabi-v7a" ]]; then
 
-        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     elif [[ "${library_arch}" == "arm64-v8a" ]]; then
 

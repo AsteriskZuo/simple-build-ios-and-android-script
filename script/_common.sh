@@ -184,6 +184,6 @@ function common_build_make() {
     shift
     for make_param in $*; do
         echo "[info][make_${make_param}_start]" >>"${library_arch_path}/log/output.log"
-        make $make_param >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make $make_commond error!"
+        make $make_param >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make $make_param error!"
     done
 }
