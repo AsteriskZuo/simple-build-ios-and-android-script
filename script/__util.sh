@@ -24,7 +24,7 @@
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
-echo "# Author:                  yu.zuo                                             #" >/dev/null
+echo "# Author:                  AsteriskZuo                                        #" >/dev/null
 echo "# Update Date:             2020.05.28                                         #" >/dev/null
 echo "# Script version:          1.0.0                                              #" >/dev/null
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null

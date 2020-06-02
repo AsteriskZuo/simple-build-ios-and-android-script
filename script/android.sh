@@ -26,7 +26,7 @@ source $(cd -P "$(dirname "$0")" && pwd)/android-common.sh
 
 log_head_print "###############################################################################"
 log_head_print "# Script Summary:                                                             #"
-log_head_print "# Author:                  yu.zuo                                             #"
+log_head_print "# Author:                  AsteriskZuo                                        #"
 log_head_print "# Update Date:             2020.05.28                                         #"
 log_head_print "# Script version:          1.0.0                                              #"
 log_head_print "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #"
@@ -68,7 +68,7 @@ for opt; do
             export COMMON_LIBRARY_VERSION=$(common_get_library_version_from_id $COMMON_LIBRARY_ID)
             export COMMON_DOWNLOAD_ADRESS=$(common_get_library_url_from_id $COMMON_LIBRARY_ID)
         else
-            common_die 'name is not in list. please refer ${COMMON_LIBRARY_NAME_LIST}'
+            common_die "${optval} is not in list. please refer \${COMMON_LIBRARY_NAME_LIST}"
         fi
         ;;
     *)

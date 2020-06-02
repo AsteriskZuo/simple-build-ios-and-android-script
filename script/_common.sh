@@ -26,7 +26,7 @@ source $(cd -P "$(dirname "$0")" && pwd)/__color_log.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
-echo "# Author:                  yu.zuo                                             #" >/dev/null
+echo "# Author:                  AsteriskZuo                                        #" >/dev/null
 echo "# Update Date:             2020.05.28                                         #" >/dev/null
 echo "# Script version:          1.0.0                                              #" >/dev/null
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
@@ -95,7 +95,7 @@ function common_printf_variable() {
     log_var_print "COMMON_PLATFORM_TYPE =         $COMMON_PLATFORM_TYPE"
     log_var_print "COMMON_LIBRARY_ID =            $COMMON_LIBRARY_ID"
     log_var_print "COMMON_LIBRARY_NAME =          $COMMON_LIBRARY_NAME"
-    log_var_print "COMMON_LIBRARY_VERSION =       $COMMON_LIBRARY_VERSION"    
+    log_var_print "COMMON_LIBRARY_VERSION =       $COMMON_LIBRARY_VERSION"
     log_var_print "COMMON_DOWNLOAD_ADRESS =       $COMMON_DOWNLOAD_ADRESS"
     log_var_print "COMMON_LIBRARY_ID_LIST =       ${COMMON_LIBRARY_ID_LIST}"
     log_var_print "COMMON_LIBRARY_NAME_LIST =     ${COMMON_LIBRARY_NAME_LIST}"
@@ -104,7 +104,7 @@ function common_printf_variable() {
 }
 
 function common_help() {
-        log_info_print "
+    log_info_print "
 
 Usage: $0 [options]
 Options: [defaults in brackets after descriptions]
@@ -120,15 +120,20 @@ Help options:
 function common_get_library_id_from_name() {
     local name=$1
     case $name in
-        openssl) echo "1"
+    openssl)
+        echo "1"
         ;;
-        nghttp2) echo "2"
+    nghttp2)
+        echo "2"
         ;;
-        curl) echo "3"
+    curl)
+        echo "3"
         ;;
-        protobuf) echo "4"
+    protobuf)
+        echo "4"
         ;;
-        *) echo "not support"
+    *)
+        echo "not support"
         ;;
     esac
 }
@@ -172,4 +177,13 @@ function common_build_config_make() {
 
 function common_archive() {
     local library_name=$1
+}
+
+function common_build_make() {
+    local library_arch_path=$1
+    shift
+    for make_param in $*; do
+        echo "[info][make_${make_param}_start]" >>"${library_arch_path}/log/output.log"
+        make $make_param >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make $make_commond error!"
+    done
 }

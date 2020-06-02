@@ -24,7 +24,7 @@
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
-echo "# Author:                  yu.zuo                                             #" >/dev/null
+echo "# Author:                  AsteriskZuo                                        #" >/dev/null
 echo "# Update Date:             2020.05.28                                         #" >/dev/null
 echo "# Script version:          1.0.0                                              #" >/dev/null
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
@@ -105,9 +105,6 @@ function android_curl_build_config_make() {
     util_remove_dir "$library_arch_path"
     util_create_dir "${library_arch_path}/log"
 
-    android_set_toolchain "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
-    android_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${ANDROID_API}"
-
     openssl_output_arch_lib_dir="${openssl_output_dir}/${library_arch}/lib"
     if [ ! -d "${openssl_output_arch_lib_dir}" ]; then
         common_die "Please build the openssl ${library_arch} library first!"
@@ -145,17 +142,7 @@ function android_curl_build_config_make() {
         common_die "not support $library_arch"
     fi
 
-    echo "[${COMMON_LIBRARY_NAME}_make_clean]" >>"${library_arch_path}/log/output.log"
-    make clean >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make clean error!"
-
-    echo "[${COMMON_LIBRARY_NAME}_make]" >>"${library_arch_path}/log/output.log"
-    make -j$(util_get_cpu_count) >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make error!"
-
-    # echo "[${COMMON_LIBRARY_NAME}_make_check]" >>"${library_arch_path}/log/output.log"
-    # make check >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make check error!"
-
-    echo "[${COMMON_LIBRARY_NAME}_make_install]" >>"${library_arch_path}/log/output.log"
-    make install >>"${library_arch_path}/log/output.log" 2>&1 || common_die "make install error!"
+    common_build_make "${library_arch_path}" "clean" "-j$(util_get_cpu_count)" "install"
 
     popd
 }

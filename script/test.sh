@@ -4,7 +4,7 @@ source $(cd -P "$(dirname "$0")" && pwd)/_common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
-echo "# Author:                  yu.zuo                                             #" >/dev/null
+echo "# Author:                  AsteriskZuo                                        #" >/dev/null
 echo "# Update Date:             2020.05.28                                         #" >/dev/null
 echo "# Script version:          1.0.0                                              #" >/dev/null
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
@@ -186,3 +186,27 @@ echo "##########################################################################
 #     common_die "get mac version error!"
 # fi
 # echo "mac_version_list=${mac_version_list[@]}"
+
+# 测试函数参数
+# function test_fun_name() {
+#     local var=$1
+#     eval $var
+# }
+# test_fun_name "ls"
+# test_fun_name ls
+
+# 测试数组
+list="
+1
+'2 3'
+xxx
+"
+function test_list() {
+    index=$1
+    shift
+    for var in $*; do
+        echo "var=$var"
+        ((i++))
+    done
+}
+test_list $list

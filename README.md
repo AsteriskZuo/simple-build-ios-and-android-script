@@ -50,7 +50,7 @@
 >     - `${COMMON_PLATFORM_TYPE}_${COMMON_LIBRARY_NAME}_build_config_make`: (must)
 >     - `${COMMON_PLATFORM_TYPE}_${COMMON_LIBRARY_NAME}_archive`: (must)
 > * Contribution notes:
->   + asteriskzuo: Create the project and complete the main frame design.
+>   + AsteriskZuo: Create the project and complete the main frame design.
 ## 2. Architecture design
 ### Programming language
 > #### bash shell script

@@ -26,7 +26,7 @@ source $(cd -P "$(dirname "$0")" && pwd)/_common.sh
 
 echo "###############################################################################" >/dev/null
 echo "# Script Summary:                                                             #" >/dev/null
-echo "# Author:                  yu.zuo                                             #" >/dev/null
+echo "# Author:                  AsteriskZuo                                        #" >/dev/null
 echo "# Update Date:             2020.05.28                                         #" >/dev/null
 echo "# Script version:          1.0.0                                              #" >/dev/null
 echo "# Url: https://github.com/AsteriskZuo/simple-build-ios-and-android-script     #" >/dev/null
@@ -212,6 +212,8 @@ function ios_build_config_make() {
     local library_arch=$2
     local build_config_make="ios_${COMMON_LIBRARY_NAME}_build_config_make"
     common_build_config_make "$library_id" "$library_arch"
+    ios_set_sysroot "${library_arch}"
+    ios_set_cpu_feature "${COMMON_LIBRARY_NAME}" "${library_arch}" "${IOS_API}" "${IOS_SYSROOT}"
     eval ${build_config_make} "$library_id" "$library_arch"
     log_info_print "ios_build_config_make $1 $2 end..."
 }
