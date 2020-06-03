@@ -10,6 +10,7 @@
 > | 1  | openssl | 1.1.1d | no | Configure is perl script |
 > | 2  | nghttp2 | 1.40.0 | no | no |
 > | 3  | curl | 7.68.0 | openssl,nghttp2 | no |
+> | 4  | protobuf | 3.11.4 | no | no |
 ### Extended instructions
 > #### Use the entry script to build the target library.  
 > #### ios.sh is the ios platform entry script.  
