@@ -102,16 +102,20 @@ function android_protobuf_build_config_make() {
     pushd .
     cd "$protobuf_zip_file_no_suffix_path"
 
+    # git submodule update --init --recursive
     if [[ "${library_arch}" == "x86-64" ]]; then
 
-        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+        # scc_info_FileDescriptorProto_google_2fprotobuf_2fdescriptor_2eproto , so use --disable-shared
+        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     elif [[ "${library_arch}" == "x86" ]]; then
 
-        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
+        # scc_info_FileDescriptorProto_google_2fprotobuf_2fdescriptor_2eproto , so use --disable-shared
+        ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     elif [[ "${library_arch}" == "armeabi-v7a" ]]; then
 
+        # scc_info_FileDescriptorProto_google_2fprotobuf_2fdescriptor_2eproto , so use --disable-shared
         ./configure --host=$(android_get_build_host "${library_arch}") --prefix="${library_arch_path}" --disable-shared --with-protoc=protobuf_command >"${library_arch_path}/log/output.log" 2>&1 || common_die "configure error!"
 
     elif [[ "${library_arch}" == "arm64-v8a" ]]; then
