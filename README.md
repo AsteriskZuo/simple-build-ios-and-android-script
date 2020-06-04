@@ -37,7 +37,7 @@
 > | 1  | yes | yes | yes | yes | - |
 > | 2  | yes | yes | yes | yes | - |
 > | 3  | yes | no | yes | yes | - |
-> | 4  | no | no | no | yes | - |
+> | 4  | no | yes | no | no | - |
 > #### Android Platform support lists:
 ### Extended instructions
 > #### Use the entry script to build the target library.  
