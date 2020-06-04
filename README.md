@@ -7,10 +7,38 @@
 ### Build target library list:
 > | id | name | version | dependent libraries | note |
 > | :- | :--- | :------ | :------------------ | :--- |
-> | 1  | openssl | 1.1.1d | no | Configure is perl script |
-> | 2  | nghttp2 | 1.40.0 | no | no |
-> | 3  | curl | 7.68.0 | openssl,nghttp2 | no |
-> | 4  | protobuf | 3.11.4 | no | no |
+> | 1  | openssl | 1.1.1d | - | Configure is perl script |
+> | 2  | nghttp2 | 1.40.0 | - | - |
+> | 3  | curl | 7.68.0 | openssl,nghttp2 | - |
+> | 3  | protobuf | 3.11.4 | - | - |
+> #### iOS Platform static library(.a) support list:
+> | id | armv7 | armv7s | arm64 | arm64e | x86 | x86-64 | note |
+> | :- | :---- | :----- | :---- | :----- | :-- | :----- | :--- |
+> | 1  | yes | no | yes | yes | no | yes | - |
+> | 2  | yes | no | yes | yes | no | yes | - |
+> | 3  | yes | no | yes | yes | no | yes | - |
+> | 4  | yes | no | yes | yes | no | yes | - |
+> #### iOS Platform dynamic library(.dylib) support list:
+> `TODO: `
+> #### iOS Platform static framework(.framework) support list:
+> `TODO: `
+> #### iOS Platform dynamic framework(.framework) support list:
+> `TODO: `
+> #### Android Platform static library(.a) support list:
+> | id | armeabi-v7a | arm64-v8a | x86 | x86-64 | note |
+> | :- | :---------- | :-------- | :-- | :----- | :--- | 
+> | 1  | yes | yes | yes | yes | - |
+> | 2  | yes | yes | yes | yes | - |
+> | 3  | yes | yes | yes | yes | - |
+> | 4  | yes | yes | yes | yes | - |
+> #### Android Platform dynamic library(.so) support list:
+> | id | armeabi-v7a | arm64-v8a | x86 | x86-64 | note |
+> | :- | :---------- | :-------- | :-- | :----- | :--- | 
+> | 1  | yes | yes | yes | yes | - |
+> | 2  | yes | yes | yes | yes | - |
+> | 3  | yes | no | yes | yes | - |
+> | 4  | no | no | no | yes | - |
+> #### Android Platform support lists:
 ### Extended instructions
 > #### Use the entry script to build the target library.  
 > #### ios.sh is the ios platform entry script.  
@@ -57,7 +85,7 @@
 > #### bash shell script
 ### Build platform:
 > #### MaoOS
-> #### Linux: **`TODO`**
+> #### Linux: **`TODO: `**
 ### Target platform:
 > #### iOS
 > #### Android
@@ -71,8 +99,8 @@
 > * Dependent detection:
 >   + Build target library dependency detection:
 >     - manual build
->     - auto build all dependency target library: **`TODO`**
-> * To reconstruct the configure: **`TODO`**
+>     - auto build all dependency target library: **`TODO: `**
+> * To reconstruct the configure: **`TODO: `**
 ### Project structure:
 > * Input:
 >   + Source directory:
