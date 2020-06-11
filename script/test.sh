@@ -196,17 +196,34 @@ echo "##########################################################################
 # test_fun_name ls
 
 # 测试数组
-list="
-1
-'2 3'
-xxx
-"
-function test_list() {
-    index=$1
-    shift
-    for var in $*; do
-        echo "var=$var"
-        ((i++))
-    done
-}
-test_list $list
+# list="
+# 1
+# '2 3'
+# xxx
+# "
+# function test_list() {
+#     index=$1
+#     shift
+#     for var in $*; do
+#         echo "var=$var"
+#         ((i++))
+#     done
+# }
+# test_list $list
+
+# 测试进度条
+# ref: https://www.cnblogs.com/chuyiwang/p/9675279.html
+#!/bin/bash<br>b=''
+# for ((i=0;$i<=100;i++))
+# do
+# let jinshu=$i*5
+# printf "[%-100s]%d%%\r" $b $jinshu
+# sleep 0.1
+# b=#$b
+# done
+# echo
+
+# printf "%-10s %-8s %-4s\n" 姓名 性别 体重kg  
+# printf "%-10s %-8s %-4.2f\n" 郭靖 男 66.1234 
+# printf "%-10s %-8s %-4.2f\n" 杨过 男 48.6543 
+# printf "%-10s %-8s %-4.2f\n" 郭芙 女 47.9876 
